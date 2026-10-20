@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Submit an agent or model evaluation to the ReAct-Manip leaderboard and look up evaluation records." />
+    <meta name="leaderboard-api" content="" />
+    <meta name="leaderboard-id" content="react-manip-season-2026" />
+    <title>Submit an evaluation · ReAct-Manip</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="evaluation-page">
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="index.html#top">ReAct-Manip</a>
+        <nav aria-label="Primary navigation">
+          <a href="index.html#background">Background</a>
+          <a href="index.html#specification">Task Specification</a>
+          <a href="index.html#task-catalog">16 Tasks</a>
+          <a href="index.html#leaderboard">Leaderboard</a>
+          <a href="index.html#citation">Cite</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="evaluation-main container" id="top">
+      <a class="evaluation-back" href="index.html#leaderboard"><span aria-hidden="true">←</span> Back to leaderboard</a>
+      <div class="evaluation-heading">
+        <span class="eyebrow">ReAct-Manip · Leaderboard</span>
+        <h1>Submit an evaluation</h1>
+        <p>Submit an evaluation ID from the evaluation service and choose what was evaluated. Look up previous evaluations by leaderboard ID.</p>
+      </div>
+
+      <aside class="evaluation-demo" aria-labelledby="evaluation-demo-title">
+        <div>
+          <span class="submit-label">Interactive demo</span>
+          <h2 id="evaluation-demo-title">Explore a completed evaluation</h2>
+          <p>Use the service-backed sample to follow the full disclosure path: <code>react_manip_test</code> → simulation records → task video → evaluation details.</p>
+        </div>
+        <div class="evaluation-demo-actions">
+          <a class="button" href="submit.html?demo=1#records">Open demo records <span aria-hidden="true">↗</span></a>
+          <a class="button primary" href="submit.html?demo=1#submission">Try demo submission <span aria-hidden="true">↗</span></a>
+        </div>
+      </aside>
+
+      <div class="evaluation-tabs" role="tablist" aria-label="Evaluation options">
+        <button id="submission-tab" class="evaluation-tab" type="button" role="tab" aria-selected="true" aria-controls="submission-panel" tabindex="0" data-evaluation-tab="submission">Submit evaluation</button>
+        <button id="records-tab" class="evaluation-tab" type="button" role="tab" aria-selected="false" aria-controls="records-panel" tabindex="-1" data-evaluation-tab="records">Evaluation records</button>
+      </div>
+
+      <details id="connection-settings" class="evaluation-connection" open>
+        <summary>Connection settings</summary>
+        <div class="evaluation-fields connection-fields">
+          <label class="evaluation-field" for="leaderboard-api-url">
+            <span>API base URL <small>Demo: <code>https://demo.react-manip.local</code></small></span>
+            <input id="leaderboard-api-url" name="api_base_url" type="url" inputmode="url" placeholder="https://api.example.com" autocomplete="off" spellcheck="false" form="submission-form" required />
+          </label>
+          <label class="evaluation-field" for="leaderboard-token">
+            <span>Bearer token <small>optional</small></span>
+            <input id="leaderboard-token" name="bearer_token" type="password" placeholder="Short-lived token" autocomplete="off" form="submission-form" />
+          </label>
+        </div>
+      </details>
+
+      <section id="submission-panel" class="evaluation-panel" role="tabpanel" aria-labelledby="submission-tab" tabindex="0">
+        <div class="evaluation-panel-heading">
+          <span class="section-number">01 / Submission</span>
+          <h2>Your evaluation</h2>
+          <p>Use the evaluation ID provided by your evaluation service.</p>
+        </div>
+        <form id="submission-form">
+          <div class="evaluation-fields">
+            <label class="evaluation-field" for="leaderboard-id">
+              <span>Leaderboard ID</span>
+              <input id="leaderboard-id" name="leaderboard_id" type="text" value="react-manip-season-2026" autocomplete="off" spellcheck="false" required />
+            </label>
+            <label class="evaluation-field" for="evaluation-id">
+              <span>Evaluation ID</span>
+              <input id="evaluation-id" name="evaluation_id" type="text" placeholder="eval_20261014_001" autocomplete="off" spellcheck="false" required />
+            </label>
+          </div>
+          <fieldset class="evaluation-type">
+            <legend>Agent or model</legend>
+            <div class="evaluation-type-options">
+              <label class="evaluation-type-option">
+                <input type="radio" name="submission_type" value="agent" required />
+                <span><strong>Agent</strong><small>The evaluation is for an agent.</small></span>
+              </label>
+              <label class="evaluation-type-option">
+                <input type="radio" name="submission_type" value="model" required />
+                <span><strong>Model</strong><small>The evaluation is for a model.</small></span>
+              </label>
+            </div>
+          </fieldset>
+          <div class="evaluation-form-footer">
+            <p id="evaluation-state" class="evaluation-message" role="status" aria-live="polite">Choose an agent or model to continue.</p>
+            <button class="button primary" id="submit-evaluation" type="submit">Submit evaluation <span aria-hidden="true">↗</span></button>
+          </div>
+        </form>
+        <div id="submission-result" class="submission-result" hidden>
+          <div><span class="submit-label">Evaluation submitted</span><strong id="submitted-evaluation-id"></strong></div>
+          <span id="submission-status"></span>
+          <button id="view-evaluation-records" class="button" type="button">View evaluation records <span aria-hidden="true">↗</span></button>
+        </div>
+      </section>
+
+      <section id="records-panel" class="evaluation-panel" role="tabpanel" aria-labelledby="records-tab" tabindex="0" hidden>
+        <div class="evaluation-panel-heading">
+          <span class="section-number">02 / Records</span>
+          <h2>Evaluation records</h2>
+          <p>Enter a leaderboard ID to find its evaluations and check their status.</p>
+        </div>
+        <form id="records-form" class="evaluation-records-search">
+          <label class="evaluation-field" for="records-leaderboard-id">
+            <span>Leaderboard ID</span>
+            <input id="records-leaderboard-id" name="leaderboard_id" type="text" value="react-manip-season-2026" autocomplete="off" spellcheck="false" required />
+          </label>
+          <button class="button primary" id="load-evaluation-records" type="submit">Search records <span aria-hidden="true">↗</span></button>
+        </form>
+        <div class="evaluation-records-toolbar">
+          <p id="records-state" class="evaluation-message" role="status" aria-live="polite">Search by leaderboard ID to load evaluation records.</p>
+          <span id="records-count">— records</span>
+        </div>
+        <div class="leaderboard-table-wrap" role="region" aria-label="Evaluation records table" tabindex="0">
+          <table class="evaluation-records">
+            <thead><tr><th scope="col">Evaluation ID</th><th scope="col">Type</th><th scope="col">Status</th><th scope="col">Score</th></tr></thead>
+            <tbody id="evaluation-records-body"><tr class="leaderboard-empty"><td colspan="4"><strong>Find your evaluation history.</strong><small>Enter a leaderboard ID above, then select Search records.</small></td></tr></tbody>
+          </table>
+        </div>
+        <button id="records-load-more" class="button records-load-more" type="button" hidden>Load more</button>
+        <div id="record-detail" class="record-detail" role="region" aria-labelledby="record-detail-title" tabindex="-1" hidden>
+          <span class="submit-label">Evaluation details</span>
+          <h3 id="record-detail-title"></h3>
+          <p id="record-detail-state" class="evaluation-message" role="status" aria-live="polite"></p>
+          <details id="simulation-records" class="simulation-records">
+            <summary>Simulation records</summary>
+            <div class="simulation-records-content">
+              <p id="simulation-records-state" class="evaluation-message" role="status" aria-live="polite">Open to view simulation runs for this evaluation.</p>
+              <div id="simulation-records-list"></div>
+              <button type="button" id="simulations-load-more" class="button" hidden>Load more runs</button>
+            </div>
+          </details>
+        </div>
+      </section>
+      <noscript><p class="evaluation-message">Enable JavaScript to submit evaluations and search records.</p></noscript>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <span>ReAct-Manip · 2026</span>
+        <span>Questions: <a href="mailto:hello@react-manip.org">hello@react-manip.org</a></span>
+      </div>
+    </footer>
+    <script src="demo-api.js" defer></script>
+    <script src="leaderboard.js" defer></script>
+    <script src="simulation-details.js" defer></script>
+  </body>
+</html>
