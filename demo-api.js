@@ -24,9 +24,7 @@
   const evaluationId = 'react_manip_test';
   window.REACT_MANIP_DEMO_EVALUATION_ID = evaluationId;
   const displayName = 'ReAct-Manip Reference Adaptive Agent';
-  // Resolve demo media against the deployed page, so both the homepage and
-  // simulation details read videos from this repository's videos/ directory.
-  const videoBase = new URL('videos/', window.location.href).href;
+  const videoBase = 'https://quotient-lab.github.io/react-manip-site/videos/';
   const taskVideos = [
     ['01', 'Ball to Target Hole', 'physical_roll.mp4'],
     ['02', 'Box Insertion', 'box_pushing.mp4'],
@@ -114,6 +112,9 @@
       display_name: displayName,
       completed_at: '2026-10-15T08:30:00Z'
     });
+    if (typeof payload?.participant_endpoint === 'string' && payload.participant_endpoint.trim()) {
+      record.participant_endpoint = payload.participant_endpoint.trim();
+    }
     if (!existing) evaluations.unshift(record);
     return copy(record);
   };
@@ -165,4 +166,3 @@
     return json({ error: 'Demo endpoint not found' }, 404);
   };
 })();
-

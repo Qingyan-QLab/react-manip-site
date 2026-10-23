@@ -17,6 +17,7 @@
   const recordsBoardInput = $('#records-leaderboard-id');
   const form = $('#submission-form');
   const evaluationInput = $('#evaluation-id');
+  const participantApiInput = $('#participant-api-url');
   const rankingBody = $('#leaderboard-body');
   const queryBoard = new URLSearchParams(location.search).get('leaderboard_id');
   const initialBoard = fixedApi ? defaultBoard : (queryBoard || saved.board || defaultBoard);
@@ -37,6 +38,7 @@
   }
   if (boardInput) { boardInput.value = initialBoard; boardInput.readOnly = Boolean(fixedApi && !demoMode); }
   if (recordsBoardInput) recordsBoardInput.value = queryBoard || initialBoard;
+  if (participantApiInput) participantApiInput.value = saved.participant_endpoint || '';
   if (demoMode && form) {
     if (evaluationInput) evaluationInput.value = window.REACT_MANIP_DEMO_EVALUATION_ID || 'react_manip_test';
     const demoType = form.querySelector('input[name="submission_type"][value="agent"]');
@@ -70,6 +72,16 @@
     if (!String(board).trim()) throw new Error('Enter a leaderboard ID.');
     const token = tokenInput ? tokenInput.value.trim() : (saved.base === base ? saved.token || '' : '');
     return { base, board: String(board).trim(), token };
+  };
+  const getParticipantEndpoint = () => {
+    const value = (participantApiInput?.value || '').trim();
+    if (!value) return '';
+    let url;
+    try { url = new URL(value); } catch { throw new Error('Enter a valid HTTP or HTTPS participant API endpoint.'); }
+    if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
+      throw new Error('Use an HTTP or HTTPS participant API endpoint without credentials, a query, or a fragment.');
+    }
+    return url.href.replace(/\/+$/, '');
   };
   const isDemoApi = (value) => {
     if (!demoApi) return false;
@@ -235,9 +247,12 @@
     $('#submission-result').hidden = true;
     setMessage(message, 'Submitting your evaluation…');
     try {
-      const result = evaluationFrom(await request(`${boardPath(config)}/evaluations`, config, controller, { evaluation_id: evaluationId, submission_type: type }));
+      const participantEndpoint = getParticipantEndpoint();
+      const submission = { evaluation_id: evaluationId, submission_type: type };
+      if (participantEndpoint) submission.participant_endpoint = participantEndpoint;
+      const result = evaluationFrom(await request(`${boardPath(config)}/evaluations`, config, controller, submission));
       if (controller.signal.aborted) return;
-      remember(config);
+      remember({ ...config, ...(participantEndpoint ? { participant_endpoint: participantEndpoint } : {}) });
       submittedConfig = config;
       submittedId = String(result.evaluation_id || result.id || evaluationId);
       const state = statusOf(result);
@@ -337,7 +352,7 @@
   if (demoMode && location.hash === '#records') {
     window.setTimeout(() => loadRecords(), 0);
   }
-  for (const input of [apiInput, tokenInput, recordsBoardInput]) {
+  for (const input of [apiInput, tokenInput, recordsBoardInput, participantApiInput]) {
     input?.addEventListener('input', () => {
       document.dispatchEvent(new Event('evaluation-details-reset'));
       stop('records');
@@ -354,7 +369,12 @@
             if (agent) agent.checked = true;
           }
         }
-        saved.token = '';
+        if (input === apiInput || input === tokenInput) saved.token = '';
+        if (input === participantApiInput) {
+          const endpoint = participantApiInput.value.trim();
+          if (endpoint) saved.participant_endpoint = endpoint;
+          else delete saved.participant_endpoint;
+        }
         try { sessionStorage.setItem(storageKey, JSON.stringify(saved)); } catch { /* Storage may be unavailable. */ }
         setMessage($('#evaluation-state'), 'Connection settings changed. Submit your evaluation when ready.');
       }

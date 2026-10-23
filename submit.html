@@ -79,6 +79,10 @@
               <input id="evaluation-id" name="evaluation_id" type="text" placeholder="eval_20261014_001" autocomplete="off" spellcheck="false" required />
             </label>
           </div>
+          <label class="evaluation-field evaluation-participant-api" for="participant-api-url">
+            <span>Participant API endpoint <small>optional for an existing evaluation; sent to the evaluator when provided</small></span>
+            <input id="participant-api-url" name="participant_endpoint" type="url" inputmode="url" placeholder="https://agent.example.com/v1" autocomplete="url" spellcheck="false" />
+          </label>
           <fieldset class="evaluation-type">
             <legend>Agent or model</legend>
             <div class="evaluation-type-options">

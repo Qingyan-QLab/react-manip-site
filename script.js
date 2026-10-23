@@ -1,43 +1,6 @@
 // Task thumbnails are served as local screenshots from image/.
 const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
 
-const visualCopy = {
-  observe: 'Start with the visible scene and a nominal action path. The hidden physical quantities are still at their baseline values.',
-  change: 'A hidden physical parameter changes during contact — for example friction, mass, compliance, or contact geometry. The camera and state signals reveal its effects.',
-  adapt: 'The policy revises its next action using the new evidence, then continues toward the same task goal without a privileged reset.'
-};
-const visualState = {
-  observe: { index: '01', title: 'Baseline observation', subtitle: 'Initial scene · nominal path', badge: 'nominal' },
-  change: { index: '02', title: 'Hidden parameter changes', subtitle: 'Concept example: contact friction μ 0.42 → 0.24', badge: 'hidden Δ' },
-  adapt: { index: '03', title: 'Action is replanned', subtitle: 'Action path: nominal → revised', badge: 'adaptive' }
-};
-const adaptationVisual = document.querySelector('.background-visual');
-const visualExplainer = document.querySelector('[data-visual-copy]');
-const visualIndex = document.querySelector('[data-visual-index]');
-const visualTitle = document.querySelector('[data-visual-title]');
-const visualSubtitle = document.querySelector('[data-visual-subtitle]');
-const visualBadge = document.querySelector('[data-visual-badge]');
-document.querySelectorAll('[data-visual-step]').forEach((tab) => {
-  if (!tab.classList.contains('visual-tab')) return;
-  tab.addEventListener('click', () => {
-    const step = tab.dataset.visualStep || 'observe';
-    adaptationVisual?.setAttribute('data-visual-step', step);
-    document.querySelectorAll('.visual-tab').forEach((item) => {
-      const active = item === tab;
-      item.classList.toggle('is-active', active);
-      item.setAttribute('aria-selected', String(active));
-    });
-    if (visualExplainer) visualExplainer.textContent = visualCopy[step] || visualCopy.observe;
-    const state = visualState[step] || visualState.observe;
-    if (visualIndex) visualIndex.textContent = state.index;
-    if (visualTitle) visualTitle.textContent = state.title;
-    if (visualSubtitle) visualSubtitle.textContent = state.subtitle;
-    if (visualBadge) visualBadge.textContent = state.badge;
-    if (adaptationVisual) adaptationVisual.dataset.visualStep = step;
-    adaptationVisual?.setAttribute('aria-label', `${state.title}. ${state.subtitle}`);
-  });
-});
-
 document.querySelectorAll('.details-reveal').forEach((details) => {
   details.addEventListener('toggle', () => {
     if (!details.open) return;
