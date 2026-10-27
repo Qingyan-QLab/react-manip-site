@@ -7,7 +7,7 @@
     <meta name="leaderboard-api" content="" />
     <meta name="leaderboard-id" content="react-manip-season-2026" />
     <title>Submit an evaluation · ReAct-Manip</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20261027-paper-r2" />
   </head>
   <body class="evaluation-page">
     <header class="site-header">
@@ -34,8 +34,8 @@
       <aside class="evaluation-demo" aria-labelledby="evaluation-demo-title">
         <div>
           <span class="submit-label">Interactive demo</span>
-          <h2 id="evaluation-demo-title">Explore a completed evaluation</h2>
-          <p>Use the service-backed sample to follow the full disclosure path: <code>react_manip_test</code> → simulation records → task video → evaluation details.</p>
+          <h2 id="evaluation-demo-title">Explore a sample evaluation</h2>
+          <p>Explore sample records, task videos, and evaluation details with <code>react_manip_test</code>. Demo scores are illustrative and are not benchmark results.</p>
         </div>
         <div class="evaluation-demo-actions">
           <a class="button" href="submit.html?demo=1#records">Open demo records <span aria-hidden="true">↗</span></a>
@@ -155,8 +155,9 @@
         <span>Questions: <a href="mailto:hello@react-manip.org">hello@react-manip.org</a></span>
       </div>
     </footer>
-    <script src="demo-api.js" defer></script>
-    <script src="leaderboard.js" defer></script>
-    <script src="simulation-details.js" defer></script>
+    <script src="tasks.js?v=20261027-paper" defer></script>
+    <script src="demo-api.js?v=20261027-paper-r2" defer></script>
+    <script src="leaderboard.js?v=20261027-paper-r2" defer></script>
+    <script src="simulation-details.js?v=20261027-paper" defer></script>
   </body>
 </html>

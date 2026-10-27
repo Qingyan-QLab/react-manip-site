@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="ReAct-Manip is a benchmark for real-time adaptation in robot manipulation." />
+    <meta name="description" content="ReAct-Manip benchmarks learning by doing in robot manipulation through 10 practice Episodes and 5 evaluation Episodes per Task Instance." />
     <meta name="leaderboard-api" content="" />
     <meta name="leaderboard-id" content="react-manip-season-2026" />
     <link rel="preconnect" href="https://quotient-lab.github.io" crossorigin />
     <link rel="dns-prefetch" href="//quotient-lab.github.io" />
-    <title>ReAct-Manip: Real-Time Adaptation in Robot Manipulation</title>
-    <link rel="stylesheet" href="styles.css?v=20261021-adapt" />
+    <title>ReAct-Manip | Practice, Adapt, Perform</title>
+    <link rel="stylesheet" href="styles.css?v=20261027-paper-r2" />
   </head>
   <body>
     <header class="site-header">
@@ -49,8 +49,8 @@
         <div class="container hero-content">
           <p class="eyebrow">Benchmark for robot manipulation</p>
           <h1>ReAct-Manip</h1>
-          <p class="subtitle">Benchmarking Real-Time Adaptation in Robot Manipulation</p>
-          <p class="abstract">Can a robot notice that its first move was wrong, and make the next move better?</p>
+          <p class="subtitle">Practice, Adapt, Perform: Benchmarking Learning by Doing in Robot Manipulation</p>
+          <p class="abstract">Can a robot learn from the consequences of its actions and turn physical experience into better performance?</p>
           <div class="actions">
             <a class="button primary" href="https://github.com/Quotient-Lab/react-manip-site">Code <span>↗</span></a>
             <a class="button" href="#background">Read the benchmark <span>↓</span></a>
@@ -60,21 +60,16 @@
 
       <section class="section" id="background">
         <div class="container">
-          <div class="section-heading">
-            <span class="section-number">01</span>
-            <h2>Background &amp; Significance</h2>
-          </div>
-          <div class="readability-layout">
-            <div class="background-copy">
-              <p class="lead-copy">Current robot manipulation benchmarks primarily evaluate whether a policy can complete a task under a fixed set of initial conditions.</p>
-              <div class="explain-grid">
-                <article><span>01</span><h3>What a fixed start misses</h3><p>Fixed-start tests measure basic competence, but they miss the uncertainty of real physical interaction.</p></article>
-                <article><span>02</span><h3>Hidden variables are unobservable</h3><p>Friction, mass, air resistance, and other hidden parameters can change the outcome of an interaction.</p></article>
-              </div>
-              <details class="details-reveal"><summary>Details <span>↗</span></summary><div class="details-popover"><span class="details-kicker">Background &amp; Significance</span><p>Current robot manipulation benchmarks primarily evaluate whether a policy can complete a task under a fixed set of initial conditions. This setting is useful for measuring basic competence, but it does not fully capture the demands of physical interaction. During interaction, hidden physical parameters such as friction, mass, and air resistance cannot be observed directly; their effects appear in the outcomes of the robot's actions.</p><p>ReAct-Manip is designed to measure the capability that follows: whether a robot can recognize that its current plan is no longer sufficient, use new observations to update its behavior, and recover without relying on a task-specific reset or privileged intervention. By treating adaptation as part of manipulation rather than as an exceptional failure case, the benchmark provides a more realistic measure of robustness for physical AI systems.</p></div></details>
-              <div class="mission-callout"><span>Why this matters</span><p>By treating adaptation as part of manipulation rather than as an exceptional failure case, the benchmark provides a more realistic measure of robustness for physical AI systems.</p></div>
+          <div class="section-heading"><span class="section-number">01</span><h2>Learning Through Interaction</h2></div>
+          <div class="readability-layout"><div class="background-copy">
+            <p class="lead-copy">ReAct-Manip evaluates whether a robot can use the consequences of its own actions to improve manipulation through physical trial and error.</p>
+            <div class="explain-grid">
+              <article><span>01</span><h3>Learning from action outcomes</h3><p>Task completion alone does not show how a policy improves. Repeated practice reveals how the outcome of one attempt informs the next.</p></article>
+              <article><span>02</span><h3>What the robot must discover</h3><p>Hidden dynamics, unknown control mappings, and occluded state can make the right action unclear from an initial observation.</p></article>
             </div>
-          </div>
+            <details class="details-reveal"><summary>Why repeated practice? <span aria-hidden="true">↗</span></summary><div class="details-popover"><span class="details-kicker">Learning through physical trial and error</span><p>A policy may need to test actions, interpret feedback, and revise later attempts. ReAct-Manip separates prior skill, correction within an Episode, and experience retained across Episodes of the same Task Instance.</p><p>Latent information may concern dynamics and material properties, control mappings, or occluded physical state and task mappings. Each TaskSpec declares which observations are public and which properties remain private.</p></div></details>
+            <div class="mission-callout"><span>The central question</span><p>Can experience from a failed contact or an unexpected trajectory lead to better performance within a limited number of attempts?</p></div>
+          </div></div>
         </div>
       </section>
 
@@ -86,14 +81,14 @@
           </div>
           <div class="spec-layout">
             <div class="spec-copy">
-              <p class="lead-copy">Each ReAct-Manip episode follows three stages: <span class="stage-word stage-start">START</span> with the scene and instruction, <span class="stage-word stage-adapt">ADAPT</span> to hidden physical parameters, and <span class="stage-word stage-perform">PERFORM</span> the task.</p>
+              <p class="lead-copy">For each Task Instance, policies <span class="stage-word stage-practice">PRACTICE</span> through physical interaction, <span class="stage-word stage-adapt">ADAPT</span> from action outcomes, and <span class="stage-word stage-perform">PERFORM</span> in evaluation Episodes.</p>
               <div class="episode-steps">
-                <article><span>01</span><h3>START</h3><p>The initial scene and instruction define the manipulation objective and the available observations.</p></article>
-                <article><span>02</span><h3>ADAPT</h3><p>Learn to adapt hidden parameters such as friction, mass, and air resistance through their effects on physical interactions.</p></article>
-                <article><span>03</span><h3>PERFORM</h3><p>Use the adapted behavior to carry out the task and work toward the manipulation objective.</p></article>
-                <article><span>04</span><h3>Success criteria</h3><p>We compare task completion, adaptation, and the additional time or intervention needed to reach the goal.</p></article>
+                <article><span>01</span><h3>PRACTICE</h3><p>Use 10 practice Episodes to test actions and observe their consequences, gathering evidence about hidden dynamics, control mappings, or occluded state.</p></article>
+                <article><span>02</span><h3>ADAPT</h3><p>Revise later actions using interaction feedback and retained experience. Memory, context, planning state, or online parameters may be updated during both practice and evaluation.</p></article>
+                <article><span>03</span><h3>PERFORM</h3><p>Use the same policy for 5 evaluation Episodes after practice. Apply accumulated experience to complete the task, while continuing to adapt to each recorded Episode condition.</p></article>
+                <article><span>04</span><h3>Success criteria</h3><p>Apply each task's declared success rules. Average final task scores over evaluation Episodes 11–15, and report success and run validity separately.</p></article>
               </div>
-              <details class="details-reveal"><summary>Details <span>↗</span></summary><div class="details-popover"><span class="details-kicker">Task Specification</span><p>START provides the initial scene and instruction. During ADAPT, the policy uses observations of its interactions to learn how to handle unobservable physical parameters, including friction, mass, and air resistance. During PERFORM, the policy applies its adapted behavior to complete the task.</p><p>A complete task specification contains the initial scene and instruction, the robot embodiment and action space, the hidden physical parameters, the available observations, and the success criteria. The evaluation considers whether the robot can learn to adapt hidden parameters and perform the task with minimal additional time or intervention.</p></div></details>
+              <details class="details-reveal"><summary>Details <span aria-hidden="true">↗</span></summary><div class="details-popover"><span class="details-kicker">Task Specification</span><p>The same policy runs 10 practice Episodes followed by 5 evaluation Episodes for each Task Instance. Adaptation is permitted throughout both phases, and experience may be retained across Episodes. A fresh policy is created for the next Task Instance.</p><p>Each TaskSpec defines the task objective, action space, public observations, success and failure rules, and score. The Task Instance supplies a stable baseline; permitted Episode-level changes are resolved and recorded before execution. Resetting the same Episode restores that recorded condition.</p><p>Cross-task scores use task bounds declared before evaluation and equal weighting across the 16 task types. Practice-to-evaluation improvement is reported separately from a paired retained-history versus cleared-history comparison, which is needed to attribute gains to prior experience.</p></div></details>
             </div>
           </div>
         </div>
@@ -101,30 +96,105 @@
 
       <section class="section" id="task-catalog">
         <div class="container">
-          <div class="section-heading">
-            <span class="section-number">03</span>
-            <h2>Task Spec Catalog</h2>
-          </div>
-          <div class="prose task-intro">
-            <p>ReAct-Manip organizes the current CL-Manip suite into 16 core task specifications. Robot-specific and interactive variants are treated as evaluation configurations of the same task family rather than counted as separate tasks.</p>
-          </div>
+          <div class="section-heading"><span class="section-number">03</span><h2>16 Manipulation Tasks</h2></div>
+          <div class="prose task-intro"><p>ReAct-Manip contains 16 task types implemented in MuJoCo/robosuite, with three candidate Task Instances per type. The released bank contains 48 instances and 720 explicit Episodes, spanning grasping, placement, contact, dynamic release, tool use, spatial search, and control.</p></div>
           <div class="task-catalog">
-            <article class="task-spec" data-task-id="01" data-video="https://quotient-lab.github.io/react-manip-site/videos/physical_roll.mp4" data-description="Control a ball on an inclined board, hold it inside a target region, and guide it through a designated hole."><span class="task-id">01</span><div><h3>Ball to Target Hole</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_1.jpg" alt="Frame from the Ball to Target Hole demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Balance · staged completion</button></div></article>
-            <article class="task-spec" data-task-id="02" data-video="https://quotient-lab.github.io/react-manip-site/videos/box_pushing.mp4" data-description="Push a block into a constrained slot under uncertain friction and asymmetric contact conditions."><span class="task-id">02</span><div><h3>Box Insertion</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_2.jpg" alt="Frame from the Box Insertion demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Contact-rich pushing · alignment</button></div></article>
-            <article class="task-spec" data-task-id="03" data-video="https://quotient-lab.github.io/react-manip-site/videos/button_oracle2.mp4" data-description="Use visual feedback to identify the button connected to a requested indicator and hold it long enough to score."><span class="task-id">03</span><div><h3>Button–Indicator Matching</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_3.jpg" alt="Frame from the Button–Indicator Matching demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Visual grounding · sequential events</button></div></article>
-            <article class="task-spec" data-task-id="04" data-video="https://quotient-lab.github.io/react-manip-site/videos/conveyor_grasp2.mp4" data-description="Sort moving objects by category into separate baskets while preserving the examples and avoiding mixed placements."><span class="task-id">04</span><div><h3>Conveyor Grasp</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_4.jpg" alt="Frame from the Conveyor Grasp demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Moving objects · semantic sorting</button></div></article>
-            <article class="task-spec" data-task-id="05" data-video="https://quotient-lab.github.io/react-manip-site/videos/record_seed2_fixed1.mp4" data-description="Match lids to cups by geometry and place each lid so that the final fit is physically stable."><span class="task-id">05</span><div><h3>Cup–Lid Matching</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_5.jpg" alt="Frame from the Cup–Lid Matching demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Fine placement · object matching</button></div></article>
-            <article class="task-spec" data-task-id="06" data-video="https://quotient-lab.github.io/react-manip-site/videos/push.mp4" data-description="Push a curling stone once, then release it and rely on its motion to settle inside a target circle."><span class="task-id">06</span><div><h3>Curling Push</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_6.jpg" alt="Frame from the Curling Push demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Open-loop dynamics · release control</button></div></article>
-            <article class="task-spec" data-task-id="07" data-video="https://quotient-lab.github.io/react-manip-site/videos/cart_driving.mp4" data-description="Open a drawer, identify the requested object among distractors, and place it into a storage box."><span class="task-id">07</span><div><h3>Find Object in Drawer</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_7.jpg" alt="Frame from the Find Object in Drawer demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Search · articulation · retrieval</button></div></article>
-            <article class="task-spec" data-task-id="08" data-video="https://quotient-lab.github.io/react-manip-site/videos/laptop_oracle0.mp4" data-description="Grasp a laptop, reorient it through a restricted opening, place it inside, and close the drawer."><span class="task-id">08</span><div><h3>Laptop into Drawer</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_8.jpg" alt="Frame from the Laptop into Drawer demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Articulated object · reorientation</button></div></article>
-            <article class="task-spec" data-task-id="09" data-video="https://quotient-lab.github.io/react-manip-site/videos/tilt_maze.mp4" data-description="Select and arrange shims to level a board, then complete a physical verification step with a slider."><span class="task-id">09</span><div><h3>Leveling Board</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_9.jpg" alt="Frame from the Leveling Board demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Multi-step assembly · geometric reasoning</button></div></article>
-            <article class="task-spec" data-task-id="10" data-video="https://quotient-lab.github.io/react-manip-site/videos/rebalance_short_front_seed0.mp4" data-description="Maintain repeated ball–paddle interactions over time, recovering from changes in timing and contact state."><span class="task-id">10</span><div><h3>Paddle Juggle</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_10.jpg" alt="Frame from the Paddle Juggle demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Continuous control · sustained success</button></div></article>
-            <article class="task-spec" data-task-id="11" data-video="https://quotient-lab.github.io/react-manip-site/videos/physical_flip.mp4" data-description="Use a pan to toss a rigid object, flip its face in the air, and catch it back inside the pan."><span class="task-id">11</span><div><h3>Pan Flip</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_11.jpg" alt="Frame from the Pan Flip demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Dynamic manipulation · interception</button></div></article>
-            <article class="task-spec" data-task-id="12" data-video="https://quotient-lab.github.io/react-manip-site/videos/erect_phone2.mp4" data-description="Locate and press the power control on a phone under varying initial pose and visual conditions."><span class="task-id">12</span><div><h3>Phone Power-On</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_12.jpg" alt="Frame from the Phone Power-On demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Precise contact · visual localization</button></div></article>
-            <article class="task-spec" data-task-id="13" data-video="https://quotient-lab.github.io/react-manip-site/videos/ball_throwing.mp4" data-description="Grasp a ball, swing through a release trajectory, and land the ball inside a pot."><span class="task-id">13</span><div><h3>Pitch Ball into Pot</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_13.jpg" alt="Frame from the Pitch Ball into Pot demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Throwing · timing and dynamics</button></div></article>
-            <article class="task-spec" data-task-id="14" data-video="https://quotient-lab.github.io/react-manip-site/videos/physical_roll.mp4" data-description="Place a ball on descending rails so that it rolls through the valley, launches, and lands in a cup."><span class="task-id">14</span><div><h3>Rail Ball to Cup</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_14.jpg" alt="Frame from the Rail Ball to Cup demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Indirect control · trajectory planning</button></div></article>
-            <article class="task-spec" data-task-id="15" data-video="https://quotient-lab.github.io/react-manip-site/videos/ring_toss.mp4" data-description="Release a ring toward a target peg and accumulate score across targets with different distances and values."><span class="task-id">15</span><div><h3>Ring Toss</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_15.jpg" alt="Frame from the Ring Toss demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Goal-directed throwing · scoring</button></div></article>
-            <article class="task-spec" data-task-id="16" data-video="https://quotient-lab.github.io/react-manip-site/videos/rolling_gamble.mov" data-description="Handle articulated or underactuated objects: either swing a chain over a bar, or calibrate a rotating scoring surface and release at the right time."><span class="task-id">16</span><div><h3>Rope Hang &amp; Turntable</h3><div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_16.jpg" alt="Frame from the Rope Hang and Turntable demo"><button class="task-preview-trigger" type="button" data-open-task>Open task view</button></div><button class="task-trigger" type="button" data-open-task>Underactuated dynamics · online calibration</button></div></article>
+            <article class="task-spec" data-task-id="01" data-task-name="phone_lean" data-video="videos/erect_phone2.mp4" data-description="Position a phone against a support and leave it in a stable leaning pose. Use contact and motion feedback to adjust the placement." data-condition="Hidden dynamics and occluded state" data-variation="Phone and support positions vary between Episodes.">
+              <span class="task-id">01</span><div><h3>phone_lean</h3><p class="task-objective">Stably lean a phone</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_12.jpg" alt="Demonstration of phone_lean"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of phone_lean">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Hidden dynamics and occluded state <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="02" data-task-name="leveling_board" data-description="Select and place shims to level a board. Use feedback from the board to revise the support arrangement and reach the required final angle." data-condition="Occluded physical state" data-variation="Shim dimensions, thin-side identities and axes, and slot assignments vary between Episodes.">
+              <span class="task-id">02</span><div><h3>leveling_board</h3><p class="task-objective">Level a board with shims</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/leveling_board.svg" alt="Illustration of a board supported by shims for leveling_board"><span class="illustration-label">Task illustration</span><button class="task-preview-trigger" type="button" data-open-task aria-label="View task details for leveling_board">View task details</button></div>
+                <button class="task-trigger" type="button" data-open-task>Occluded physical state <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="03" data-task-name="rail_ball_to_cup" data-video="videos/physical_roll.mp4" data-description="Release a ball onto rails so that it travels along them, leaves the rail, and lands in a cup. Use the resulting trajectory to refine later attempts." data-condition="Hidden dynamics" data-variation="The same recorded reset state is reused within a Task Instance.">
+              <span class="task-id">03</span><div><h3>rail_ball_to_cup</h3><p class="task-objective">Release a ball to a cup</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_14.jpg" alt="Demonstration of rail_ball_to_cup"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of rail_ball_to_cup">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Hidden dynamics <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="04" data-task-name="pitch_pot" data-video="videos/ball_throwing.mp4" data-description="Throw a ball into a pot. Adjust the motion and release using feedback from previous throws; no further contact is allowed after release." data-condition="Hidden dynamics" data-variation="The same recorded reset state is reused within a Task Instance.">
+              <span class="task-id">04</span><div><h3>pitch_pot</h3><p class="task-objective">Throw a ball into a pot</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_13.jpg" alt="Demonstration of pitch_pot"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of pitch_pot">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Hidden dynamics <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="05" data-task-name="conveyor_grasp" data-video="videos/conveyor_grasp2.mp4" data-description="Grasp moving targets from a conveyor and sort them by category. Completed targets earn partial credit; incorrect placements and unfinished targets affect the outcome." data-condition="Hidden dynamics and occluded state" data-variation="Belt speed and target sizes vary between Episodes.">
+              <span class="task-id">05</span><div><h3>conveyor_grasp</h3><p class="task-objective">Sort moving targets</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_4.jpg" alt="Demonstration of conveyor_grasp"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of conveyor_grasp">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Hidden dynamics and occluded state <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="06" data-task-name="curling_push" data-video="videos/push.mp4" data-description="Push and release a stone so that it stops inside the target. Contact is prohibited after release, so each outcome informs the next attempt." data-condition="Hidden dynamics" data-variation="The same recorded reset state is reused within a Task Instance.">
+              <span class="task-id">06</span><div><h3>curling_push</h3><p class="task-objective">Stop a stone in a target</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_6.jpg" alt="Demonstration of curling_push"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of curling_push">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Hidden dynamics <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="07" data-task-name="turntable_gamble" data-video="videos/rolling_gamble.mov" data-description="Set a turntable in motion and make it stop at a scoring sector. Use observed rotation and stopping behavior to adjust the next action." data-condition="Hidden dynamics" data-variation="The same recorded reset state is reused within a Task Instance.">
+              <span class="task-id">07</span><div><h3>turntable_gamble</h3><p class="task-objective">Stop at a scoring sector</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_16.jpg" alt="Demonstration of turntable_gamble"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of turntable_gamble">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Hidden dynamics <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="08" data-task-name="ring_toss" data-video="videos/ring_toss.mp4" data-description="Throw a ring onto the scoring posts. Refine the release from observed trajectories. A positive score meets the success condition; the score also distinguishes the resulting placement." data-condition="Hidden dynamics" data-variation="The same recorded reset state is reused within a Task Instance.">
+              <span class="task-id">08</span><div><h3>ring_toss</h3><p class="task-objective">Throw a ring onto posts</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_15.jpg" alt="Demonstration of ring_toss"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of ring_toss">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Hidden dynamics <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="09" data-task-name="box_insertion" data-video="videos/box_pushing.mp4" data-description="Push an asymmetric block into a slot while adjusting to friction and uneven mass distribution. The score combines final insertion progress and completion time." data-condition="Hidden dynamics" data-variation="Block friction and mass multipliers vary between Episodes.">
+              <span class="task-id">09</span><div><h3>box_insertion</h3><p class="task-objective">Insert an asymmetric block</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_2.jpg" alt="Demonstration of box_insertion"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of box_insertion">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Hidden dynamics <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="10" data-task-name="car_drive" data-video="videos/cart_driving.mp4" data-description="Operate a joystick to drive a vehicle through obstacles and reach the goal. Use the observed vehicle response to adjust steering and throttle control." data-condition="Hidden control mapping" data-variation="The throttle-to-speed gain varies between Episodes.">
+              <span class="task-id">10</span><div><h3>car_drive</h3><p class="task-objective">Drive through obstacles</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_7.jpg" alt="Demonstration of car_drive"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of car_drive">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Hidden control mapping <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="11" data-task-name="rope_hang" data-video="videos/rebalance_short_front_seed0.mp4" data-description="Manipulate a chain so that it hangs stably over a support. Account for its motion and contact response, and satisfy the final stability condition." data-condition="Hidden dynamics" data-variation="The same recorded draped reset state is reused within a Task Instance.">
+              <span class="task-id">11</span><div><h3>rope_hang</h3><p class="task-objective">Stably hang a chain</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_10.jpg" alt="Demonstration of rope_hang"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of rope_hang">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Hidden dynamics <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="12" data-task-name="pan_flip" data-video="videos/physical_flip.mp4" data-description="Move a pan to toss and flip a pie, then recapture it in the pan. Adjust the motion using feedback from the toss, rotation, and landing." data-condition="Hidden dynamics" data-variation="The same recorded reset state is reused within a Task Instance.">
+              <span class="task-id">12</span><div><h3>pan_flip</h3><p class="task-objective">Flip and recapture a pie</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_11.jpg" alt="Demonstration of pan_flip"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of pan_flip">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Hidden dynamics <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="13" data-task-name="button_indicator_matching" data-video="videos/button_oracle2.mp4" data-description="Discover which buttons activate the indicator lights, then respond to the requested target sequence. Use observed button-light responses to select the correct actions." data-condition="Hidden task mapping" data-variation="The requested target sequence varies between Episodes.">
+              <span class="task-id">13</span><div><h3>button_indicator_matching</h3><p class="task-objective">Match buttons to lights</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_3.jpg" alt="Demonstration of button_indicator_matching"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of button_indicator_matching">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Hidden task mapping <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="14" data-task-name="laptop_into_drawer" data-video="videos/laptop_oracle0.mp4" data-description="Place a laptop completely inside a drawer, close the drawer, and disengage the grippers. All three conditions are required for final success." data-condition="Occluded physical state" data-variation="The laptop position and orientation vary between Episodes.">
+              <span class="task-id">14</span><div><h3>laptop_into_drawer</h3><p class="task-objective">Insert a laptop and close drawer</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_8.jpg" alt="Demonstration of laptop_into_drawer"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of laptop_into_drawer">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Occluded physical state <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="15" data-task-name="find_object_in_drawer" data-video="videos/record_seed2_fixed1.mp4" data-description="Search the drawers and collect the requested objects in order. Completed targets earn partial credit. Object locations remain fixed while the order of five requested targets changes." data-condition="Occluded physical state" data-variation="The order of five requested targets varies; their physical state remains fixed.">
+              <span class="task-id">15</span><div><h3>find_object_in_drawer</h3><p class="task-objective">Find and collect targets</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_5.jpg" alt="Demonstration of find_object_in_drawer"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of find_object_in_drawer">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Occluded physical state <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
+            <article class="task-spec" data-task-id="16" data-task-name="tilte_maze" data-video="videos/tilt_maze.mp4" data-description="Use a joystick to guide a ball through a maze. Adjust control from the ball response while avoiding penalty regions. Scoring records route progress and deducts route penalties." data-condition="Hidden control mapping and dynamics" data-variation="The same recorded reset state is reused within a Task Instance.">
+              <span class="task-id">16</span><div><h3>tilte_maze</h3><p class="task-objective">Guide a ball through a maze</p>
+                <div class="task-preview"><img class="task-preview-image" loading="lazy" src="image/task_9.jpg" alt="Demonstration of tilte_maze"><button class="task-preview-trigger" type="button" data-open-task aria-label="Watch demonstration of tilte_maze">Watch demonstration</button></div>
+                <button class="task-trigger" type="button" data-open-task>Hidden control mapping and dynamics <span aria-hidden="true">↗</span></button>
+              </div>
+            </article>
           </div>
         </div>
       </section>
@@ -133,8 +203,8 @@
         <div class="task-modal-backdrop" data-close-task></div>
         <section class="task-dialog" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
           <button class="task-modal-close" type="button" aria-label="Close task details" data-close-task>×</button>
-          <div class="task-dialog-media"><video id="task-modal-video" controls muted playsinline preload="none"></video><div class="task-video-message" id="task-video-message" hidden>Demo video unavailable.</div></div>
-          <div class="task-dialog-copy"><span class="task-dialog-kicker" id="task-modal-kicker">TASK 01 · DEMO</span><h3 id="task-modal-title">Ball to Target Hole</h3><p id="task-modal-description"></p><span class="task-dialog-tag" id="task-modal-tag"></span></div>
+          <div class="task-dialog-media"><video id="task-modal-video" controls muted playsinline preload="none" hidden></video><img id="task-modal-image" alt="" hidden><div class="task-video-message" id="task-video-message" hidden>Demo video unavailable.</div></div>
+          <div class="task-dialog-copy"><span class="task-dialog-kicker" id="task-modal-kicker">TASK 01 · DETAILS</span><h3 id="task-modal-title">phone_lean</h3><p id="task-modal-description"></p><p class="task-dialog-variation" id="task-modal-variation"></p><span class="task-dialog-tag" id="task-modal-tag"></span></div>
         </section>
       </div>
 
@@ -157,7 +227,7 @@
           </div>
           <div class="citation-card">
             <div class="citation-card-main">
-              <div class="citation-card-copy"><span class="citation-kicker">Project citation</span><h3>ReAct-Manip</h3><p>Benchmarking Real-Time Adaptation in Robot Manipulation</p></div>
+              <div class="citation-card-copy"><span class="citation-kicker">Project citation</span><h3>ReAct-Manip</h3><p>Practice, Adapt, Perform: Benchmarking Learning by Doing in Robot Manipulation</p></div>
               <button class="button primary citation-copy" type="button" data-copy-citation>Copy citation <span>↗</span></button>
             </div>
             <div class="citation-facts">
@@ -167,7 +237,7 @@
             </div>
             <a class="citation-link" href="https://quotient-lab.github.io/react-manip-site/"><span>quotient-lab.github.io/react-manip-site</span><b>↗</b></a>
             <code class="citation-source" data-citation-text>@misc{reactmanip2026,
-  title        = {ReAct-Manip: Benchmarking Real-Time Adaptation in Robot Manipulation},
+  title        = {ReAct-Manip: Practice, Adapt, Perform: Benchmarking Learning by Doing in Robot Manipulation},
   author       = {The ReAct-Manip Team},
   year         = {2026},
   howpublished = {ReAct-Manip benchmark website},
@@ -184,9 +254,10 @@
         <span>Questions: <a href="mailto:hello@react-manip.org">hello@react-manip.org</a></span>
       </div>
     </footer>
-    <script src="script.js?v=20261021-wording" defer></script>
-    <script src="demo-api.js" defer></script>
-    <script src="leaderboard.js" defer></script>
+    <script src="tasks.js?v=20261027-paper" defer></script>
+    <script src="script.js?v=20261027-paper" defer></script>
+    <script src="demo-api.js?v=20261027-paper-r2" defer></script>
+    <script src="leaderboard.js?v=20261027-paper-r2" defer></script>
   </body>
 </html>
 

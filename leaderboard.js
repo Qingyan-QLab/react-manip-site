@@ -163,7 +163,7 @@
         const category = typeLabel(row.submission_type || row.type || row.category);
         return `<tr><td><span class="rank-value">${escapeText(row.rank ?? index + 1)}</span></td><td><span class="entry-category">${escapeText(category)}</span></td><td><div class="model-cell"><span class="model-name"><strong>${escapeText(name)}</strong></span></div></td><td><span class="score-value">${escapeText(row.score ?? row.value)}</span></td></tr>`;
       }).join('') : '<tr class="leaderboard-empty"><td colspan="4"><span>NO RESULTS YET</span><strong>Be the first on the leaderboard.</strong><small>Completed evaluations will appear here.</small></td></tr>';
-      rankingState('connected', 'Live rankings');
+      rankingState('connected', isDemoApi(config.base) ? 'Demo rankings · sample data' : 'Live rankings');
     } catch (error) {
       if (error.name !== 'AbortError') rankingState('error', error.message);
     } finally {

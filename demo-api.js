@@ -23,31 +23,13 @@
   const board = 'react-manip-season-2026';
   const evaluationId = 'react_manip_test';
   window.REACT_MANIP_DEMO_EVALUATION_ID = evaluationId;
-  const displayName = 'ReAct-Manip Reference Adaptive Agent';
-  const videoBase = 'https://quotient-lab.github.io/react-manip-site/videos/';
-  const taskVideos = [
-    ['01', 'Ball to Target Hole', 'physical_roll.mp4'],
-    ['02', 'Box Insertion', 'box_pushing.mp4'],
-    ['03', 'Button–Indicator Matching', 'button_oracle2.mp4'],
-    ['04', 'Conveyor Grasp', 'conveyor_grasp2.mp4'],
-    ['05', 'Cup–Lid Matching', 'record_seed2_fixed1.mp4'],
-    ['06', 'Curling Push', 'push.mp4'],
-    ['07', 'Find Object in Drawer', 'cart_driving.mp4'],
-    ['08', 'Laptop into Drawer', 'laptop_oracle0.mp4'],
-    ['09', 'Leveling Board', 'tilt_maze.mp4'],
-    ['10', 'Paddle Juggle', 'rebalance_short_front_seed0.mp4'],
-    ['11', 'Pan Flip', 'physical_flip.mp4'],
-    ['12', 'Phone Power-On', 'erect_phone2.mp4'],
-    ['13', 'Pitch Ball into Pot', 'ball_throwing.mp4'],
-    ['14', 'Rail Ball to Cup', 'physical_roll.mp4'],
-    ['15', 'Ring Toss', 'ring_toss.mp4'],
-    ['16', 'Rope Hang & Turntable', 'rolling_gamble.mov']
-  ];
-  const simulations = taskVideos.map(([number, task_name, file], index) => ({
+  const displayName = 'Sample Agent (Demo Data)';
+  const videoBase = new URL('videos/', window.location.href);
+  const simulations = window.REACT_MANIP_TASKS.map(({ id: number, name: task_name, video: file }, index) => ({
     simulation_id: `${evaluationId}_sim_${number}`,
     task_name,
     task_id: number,
-    video_url: `${videoBase}${file}`,
+    video_url: file ? new URL(file, videoBase).href : null,
     metrics: {
       recovery: Number((0.985 - index * 0.006).toFixed(3)),
       latency_ms: 118 + index * 7,

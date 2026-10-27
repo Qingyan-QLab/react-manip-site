@@ -98,12 +98,14 @@
   };
   const createRun = (run, context, index) => {
     const id = String(run.simulation_id ?? run.id);
+    const rawTaskName = run.task_name || run.name || 'Simulation';
+    const taskName = window.REACT_MANIP_TASK_NAME?.(rawTaskName) || rawTaskName;
     const path = `/evaluations/${encodeURIComponent(context.id)}/simulations/${encodeURIComponent(id)}`;
     const videoKey = `video-${context.generation}-${index}`;
     const metricsKey = `metrics-${context.generation}-${index}`;
     const runDetails = element('details', 'simulation-run');
     const summary = element('summary');
-    summary.append(element('span', 'simulation-run-number', `Run ${String(index + 1).padStart(2, '0')}`), element('strong', '', String(run.task_name || run.name || 'Simulation')));
+    summary.append(element('span', 'simulation-run-number', `Run ${String(index + 1).padStart(2, '0')}`), element('strong', '', taskName));
     const runContent = element('div', 'simulation-run-content');
     const videoDetails = element('details', 'simulation-video');
     videoDetails.append(element('summary', '', 'Watch simulation video'));
@@ -115,7 +117,7 @@
     video.playsInline = true;
     video.preload = 'metadata';
     video.hidden = true;
-    video.setAttribute('aria-label', `Simulation video for ${run.task_name || `run ${index + 1}`}`);
+    video.setAttribute('aria-label', `Simulation video for ${taskName}`);
     const metricsDetails = element('details', 'simulation-metrics');
     metricsDetails.append(element('summary', '', 'Additional evaluation details'));
     const metricsContent = element('div', 'simulation-metrics-content');

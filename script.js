@@ -25,6 +25,8 @@ citationCopyButton?.addEventListener('click', async () => {
 
 const taskModal = document.querySelector('#task-modal');
 const taskModalVideo = document.querySelector('#task-modal-video');
+const taskModalImage = document.querySelector('#task-modal-image');
+const taskModalVariation = document.querySelector('#task-modal-variation');
 const taskVideoMessage = document.querySelector('#task-video-message');
 const taskModalKicker = document.querySelector('#task-modal-kicker');
 const taskModalTitle = document.querySelector('#task-modal-title');
@@ -37,6 +39,12 @@ if (taskModal) {
   taskModal.hidden = true;
   taskModal.setAttribute('aria-hidden', 'true');
 }
+
+taskModalVideo?.addEventListener('error', () => {
+  if (!taskModal?.hidden && !taskModalVideo.hidden && taskModalVideo.hasAttribute('src') && taskVideoMessage) {
+    taskVideoMessage.hidden = false;
+  }
+});
 
 const closeTaskModal = () => {
   if (!taskModal) return;
@@ -57,22 +65,38 @@ const openTaskModal = (trigger) => {
   lastTaskTrigger = trigger;
   const id = card.dataset.taskId || '01';
   const title = card.querySelector('h3')?.textContent?.trim() || 'Task detail';
-  const tag = trigger.textContent.replace('↗', '').trim();
-  if (taskModalKicker) taskModalKicker.textContent = `TASK ${id} · DEMO`;
+  const tag = card.dataset.condition || '';
+  const videoSource = card.dataset.video;
+  const previewImage = card.querySelector('.task-preview-image');
+  if (taskModalKicker) taskModalKicker.textContent = `TASK ${id} · ${videoSource ? 'DEMONSTRATION' : 'ILLUSTRATION'}`;
   if (taskModalTitle) taskModalTitle.textContent = title;
   if (taskModalDescription) taskModalDescription.textContent = card.dataset.description || '';
   if (taskModalTag) taskModalTag.textContent = tag;
+  if (taskModalVariation) taskModalVariation.textContent = card.dataset.variation || '';
+  if (taskModalImage) {
+    taskModalImage.hidden = !!videoSource;
+    taskModalImage.src = previewImage?.getAttribute('src') || '';
+    taskModalImage.alt = previewImage?.alt || '';
+  }
   taskModal.hidden = false;
   taskModal.setAttribute('aria-hidden', 'false');
   document.body.classList.add('task-modal-open');
   if (taskVideoMessage) taskVideoMessage.hidden = true;
   if (taskModalVideo) {
-    taskModalVideo.addEventListener('error', () => {
-      if (taskVideoMessage) taskVideoMessage.hidden = false;
-    }, { once: true });
-    taskModalVideo.src = card.dataset.video || '';
-    taskModalVideo.load();
-    if (!prefersReducedMotion) window.setTimeout(() => taskModalVideo.play().catch(() => {}), 0);
+    taskModalVideo.pause();
+    taskModalVideo.removeAttribute('src');
+    taskModalVideo.hidden = !videoSource;
+    if (videoSource) {
+      taskModalVideo.src = videoSource;
+      taskModalVideo.load();
+      if (!prefersReducedMotion) {
+        window.setTimeout(() => {
+          if (!taskModal.hidden && taskModalVideo.getAttribute('src') === videoSource) taskModalVideo.play().catch(() => {});
+        }, 0);
+      }
+    } else {
+      taskModalVideo.load();
+    }
   }
   taskModal.querySelector('.task-modal-close')?.focus();
 };
