@@ -18,6 +18,9 @@
   const form = $('#submission-form');
   const evaluationInput = $('#evaluation-id');
   const participantApiInput = $('#participant-api-url');
+  const contactMethodInput = $('#contact-method');
+  const contactValueInput = $('#contact-value');
+  const profileFields = ['team_name', 'organization', 'policy_name', 'email', 'contact_method', 'contact_value'];
   const rankingBody = $('#leaderboard-body');
   const queryBoard = new URLSearchParams(location.search).get('leaderboard_id');
   const initialBoard = fixedApi ? defaultBoard : (queryBoard || saved.board || defaultBoard);
@@ -41,6 +44,8 @@
   if (participantApiInput) participantApiInput.value = saved.participant_endpoint || '';
   if (demoMode && form) {
     if (evaluationInput) evaluationInput.value = window.REACT_MANIP_DEMO_EVALUATION_ID || 'react_manip_test';
+    const demoProfile = { team_name: 'Demo team', organization: 'Independent', policy_name: 'sample_policy_v1', email: 'demo@example.com', contact_method: 'wechat', contact_value: 'demo_contact' };
+    for (const [name, value] of Object.entries(demoProfile)) form.elements.namedItem(name).value = value;
     const demoType = form.querySelector('input[name="submission_type"][value="agent"]');
     if (demoType) demoType.checked = true;
   }
@@ -60,6 +65,59 @@
     if (!element) return;
     element.textContent = message;
     element.dataset.state = state;
+  };
+  const validateProfileField = (input) => {
+    const value = input.value.trim();
+    let error = '';
+    if (!value) error = 'Please complete this required field.';
+    else if (input.maxLength > 0 && value.length > input.maxLength) error = `Use no more than ${input.maxLength} characters.`;
+    else if (input === contactMethodInput && !['phone', 'wechat'].includes(value)) error = 'Choose Phone number or WeChat.';
+    else if (input === contactValueInput) {
+      if (contactMethodInput.value === 'phone') {
+        const number = value.replace(/[\s().-]/g, '');
+        if (!/^\+?\d{7,15}$/.test(number)) error = 'Enter a phone number with 7–15 digits, including the country code when needed.';
+      } else if (/\s/.test(value)) error = 'Enter your WeChat ID without spaces.';
+    }
+    input.setCustomValidity(error);
+    if (input.hasAttribute('aria-invalid')) input.setAttribute('aria-invalid', String(!input.validity.valid));
+  };
+  if (form && contactMethodInput && contactValueInput) {
+    let currentMethod = contactMethodInput.value;
+    const contactDrafts = {};
+    const updateContactField = () => {
+      const phone = contactMethodInput.value === 'phone';
+      $('#contact-value-label').textContent = phone ? 'Phone number' : 'WeChat ID';
+      contactValueInput.type = phone ? 'tel' : 'text';
+      contactValueInput.inputMode = phone ? 'tel' : 'text';
+      contactValueInput.autocomplete = phone ? 'tel' : 'off';
+      contactValueInput.maxLength = phone ? 40 : 64;
+      contactValueInput.placeholder = phone ? '+86 138 0000 0000' : 'Your WeChat ID';
+      $('#contact-value-hint').textContent = phone ? 'Include the country code for international numbers.' : 'Enter your WeChat ID, rather than your display name.';
+      contactValueInput.setCustomValidity('');
+      contactValueInput.removeAttribute('aria-invalid');
+    };
+    updateContactField();
+    contactMethodInput.addEventListener('change', () => {
+      contactDrafts[currentMethod] = contactValueInput.value;
+      currentMethod = contactMethodInput.value;
+      contactValueInput.value = contactDrafts[currentMethod] || '';
+      updateContactField();
+    });
+    for (const name of profileFields) {
+      const input = form.elements.namedItem(name);
+      input.addEventListener('input', () => validateProfileField(input));
+    }
+    form.addEventListener('invalid', (event) => {
+      event.target.setAttribute('aria-invalid', 'true');
+      setMessage($('#evaluation-state'), 'Please check the required fields and contact details.', 'error');
+    }, true);
+  }
+  const getSubmissionProfile = () => {
+    for (const name of profileFields) validateProfileField(form.elements.namedItem(name));
+    if (!form.reportValidity()) return null;
+    const profile = Object.fromEntries(profileFields.map((name) => [name, form.elements.namedItem(name).value.trim()]));
+    if (profile.contact_method === 'phone') profile.contact_value = profile.contact_value.replace(/[\s().-]/g, '');
+    return profile;
   };
   const getConfig = (board = boardInput ? boardInput.value : initialBoard) => {
     const base = (fixedApi || (apiInput ? apiInput.value : saved.base) || '').trim().replace(/\/+$/, '');
@@ -231,6 +289,8 @@
     let config;
     const evaluationId = $('#evaluation-id').value.trim();
     const type = form.querySelector('input[name="submission_type"]:checked')?.value;
+    const profile = getSubmissionProfile();
+    if (!profile) return;
     try {
       config = getConfig();
       if (!evaluationId) throw new Error('Enter the evaluation ID returned by the evaluation service.');
@@ -248,7 +308,7 @@
     setMessage(message, 'Submitting your evaluation…');
     try {
       const participantEndpoint = getParticipantEndpoint();
-      const submission = { evaluation_id: evaluationId, submission_type: type };
+      const submission = { evaluation_id: evaluationId, submission_type: type, ...profile };
       if (participantEndpoint) submission.participant_endpoint = participantEndpoint;
       const result = evaluationFrom(await request(`${boardPath(config)}/evaluations`, config, controller, submission));
       if (controller.signal.aborted) return;

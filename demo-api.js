@@ -58,6 +58,8 @@
     display_name: displayName,
     completed_at: '2026-10-15T08:30:00Z'
   }];
+  // Contact information belongs to submission records, never public rankings.
+  const submissionContacts = new Map();
 
   const originalFetch = window.fetch.bind(window);
   const json = (data, status = 200) => new Response(JSON.stringify(data), {
@@ -94,6 +96,15 @@
       display_name: displayName,
       completed_at: '2026-10-15T08:30:00Z'
     });
+    record.team_name = payload.team_name.trim();
+    record.organization = payload.organization.trim();
+    record.policy_name = payload.policy_name.trim();
+    record.display_name = record.policy_name;
+    submissionContacts.set(submittedId, {
+      email: payload.email.trim(),
+      contact_method: payload.contact_method,
+      contact_value: payload.contact_value.trim()
+    });
     if (typeof payload?.participant_endpoint === 'string' && payload.participant_endpoint.trim()) {
       record.participant_endpoint = payload.participant_endpoint.trim();
     }
@@ -114,7 +125,7 @@
       return json({ rankings: [{
         rank: 1,
         submission_type: ranked?.submission_type || 'agent',
-        leaderboard_id: displayName,
+        leaderboard_id: ranked?.display_name || displayName,
         score: 100,
         evaluation_id: ranked?.evaluation_id || evaluationId
       }] });
@@ -123,7 +134,13 @@
       return json({ evaluations: copy(evaluations), next_cursor: null });
     }
     if (parts[2] === 'leaderboards' && parts[4] === 'evaluations' && method === 'POST') {
-      const record = saveSubmission(await readBody(input, init));
+      const payload = await readBody(input, init);
+      const required = ['evaluation_id', 'team_name', 'organization', 'policy_name', 'email', 'contact_value'];
+      if (required.some((field) => typeof payload?.[field] !== 'string' || !payload[field].trim()) ||
+          !['agent', 'model'].includes(payload.submission_type) || !['phone', 'wechat'].includes(payload.contact_method)) {
+        return json({ error: 'Complete all required submission and contact fields.' }, 400);
+      }
+      const record = saveSubmission(payload);
       // Keep the demo on the same asynchronous path as a real evaluator:
       // registration is accepted first, then the status lookup returns the
       // completed sample when the UI polls it.

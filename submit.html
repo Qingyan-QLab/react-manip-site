@@ -7,7 +7,7 @@
     <meta name="leaderboard-api" content="" />
     <meta name="leaderboard-id" content="react-manip-season-2026" />
     <title>Submit an evaluation · ReAct-Manip</title>
-    <link rel="stylesheet" href="styles.css?v=20261027-paper-r2" />
+    <link rel="stylesheet" href="styles.css?v=20261028-submission" />
   </head>
   <body class="evaluation-page">
     <header class="site-header">
@@ -28,7 +28,7 @@
       <div class="evaluation-heading">
         <span class="eyebrow">ReAct-Manip · Leaderboard</span>
         <h1>Submit an evaluation</h1>
-        <p>Submit an evaluation ID from the evaluation service and choose what was evaluated. Look up previous evaluations by leaderboard ID.</p>
+        <p>Introduce your team and policy, add your contact details, and register your evaluation for the leaderboard.</p>
       </div>
 
       <aside class="evaluation-demo" aria-labelledby="evaluation-demo-title">
@@ -48,15 +48,15 @@
         <button id="records-tab" class="evaluation-tab" type="button" role="tab" aria-selected="false" aria-controls="records-panel" tabindex="-1" data-evaluation-tab="records">Evaluation records</button>
       </div>
 
-      <details id="connection-settings" class="evaluation-connection" open>
+      <details id="connection-settings" class="evaluation-connection">
         <summary>Connection settings</summary>
         <div class="evaluation-fields connection-fields">
           <label class="evaluation-field" for="leaderboard-api-url">
-            <span>API base URL <small>Demo: <code>https://demo.react-manip.local</code></small></span>
+            <span>Evaluation service URL <span class="required-mark" aria-hidden="true">*</span> <small>Demo: <code>https://demo.react-manip.local</code></small></span>
             <input id="leaderboard-api-url" name="api_base_url" type="url" inputmode="url" placeholder="https://api.example.com" autocomplete="off" spellcheck="false" form="submission-form" required />
           </label>
           <label class="evaluation-field" for="leaderboard-token">
-            <span>Bearer token <small>optional</small></span>
+            <span>Access token <small>optional</small></span>
             <input id="leaderboard-token" name="bearer_token" type="password" placeholder="Short-lived token" autocomplete="off" form="submission-form" />
           </label>
         </div>
@@ -65,26 +65,60 @@
       <section id="submission-panel" class="evaluation-panel" role="tabpanel" aria-labelledby="submission-tab" tabindex="0">
         <div class="evaluation-panel-heading">
           <span class="section-number">01 / Submission</span>
-          <h2>Your evaluation</h2>
-          <p>Use the evaluation ID provided by your evaluation service.</p>
+          <h2>Your submission</h2>
+          <p>Fields marked <span class="required-mark" aria-hidden="true">*</span> are required.</p>
         </div>
         <form id="submission-form">
+          <div class="evaluation-fields submission-profile">
+            <label class="evaluation-field" for="team-name">
+              <span>Team name <span class="required-mark" aria-hidden="true">*</span></span>
+              <input id="team-name" name="team_name" type="text" placeholder="Your team name" maxlength="100" autocomplete="off" required />
+            </label>
+            <label class="evaluation-field" for="organization">
+              <span>Organization <span class="required-mark" aria-hidden="true">*</span></span>
+              <input id="organization" name="organization" type="text" placeholder="University, company, or independent" maxlength="150" autocomplete="organization" required />
+            </label>
+            <label class="evaluation-field" for="policy-name">
+              <span>Policy name <span class="required-mark" aria-hidden="true">*</span></span>
+              <input id="policy-name" name="policy_name" type="text" placeholder="my_policy_v1" maxlength="100" autocomplete="off" spellcheck="false" required />
+            </label>
+            <label class="evaluation-field" for="contact-email">
+              <span>Email <span class="required-mark" aria-hidden="true">*</span></span>
+              <input id="contact-email" name="email" type="email" placeholder="you@example.com" maxlength="254" autocomplete="email" required />
+            </label>
+            <label class="evaluation-field" for="contact-method">
+              <span>Contact method <span class="required-mark" aria-hidden="true">*</span></span>
+              <select id="contact-method" name="contact_method" required>
+                <option value="phone">Phone number / 手机号</option>
+                <option value="wechat">WeChat / 微信</option>
+              </select>
+            </label>
+            <label class="evaluation-field" for="contact-value">
+              <span><span id="contact-value-label">Phone number</span> <span class="required-mark" aria-hidden="true">*</span></span>
+              <input id="contact-value" name="contact_value" type="tel" inputmode="tel" placeholder="+86 138 0000 0000" maxlength="40" autocomplete="tel" aria-describedby="contact-value-hint" required />
+              <small id="contact-value-hint" class="field-hint">Include the country code for international numbers.</small>
+            </label>
+          </div>
+          <div class="submission-section-heading">
+            <h3>Evaluation details</h3>
+            <p>Link the evaluation provided by your evaluation service.</p>
+          </div>
           <div class="evaluation-fields">
             <label class="evaluation-field" for="leaderboard-id">
-              <span>Leaderboard ID</span>
+              <span>Leaderboard <span class="required-mark" aria-hidden="true">*</span></span>
               <input id="leaderboard-id" name="leaderboard_id" type="text" value="react-manip-season-2026" autocomplete="off" spellcheck="false" required />
             </label>
             <label class="evaluation-field" for="evaluation-id">
-              <span>Evaluation ID</span>
+              <span>Evaluation ID <span class="required-mark" aria-hidden="true">*</span></span>
               <input id="evaluation-id" name="evaluation_id" type="text" placeholder="eval_20261014_001" autocomplete="off" spellcheck="false" required />
             </label>
           </div>
           <label class="evaluation-field evaluation-participant-api" for="participant-api-url">
-            <span>Participant API endpoint <small>optional for an existing evaluation; sent to the evaluator when provided</small></span>
+            <span>Policy API URL <small>optional for an existing evaluation</small></span>
             <input id="participant-api-url" name="participant_endpoint" type="url" inputmode="url" placeholder="https://agent.example.com/v1" autocomplete="url" spellcheck="false" />
           </label>
           <fieldset class="evaluation-type">
-            <legend>Agent or model</legend>
+            <legend>Submission type <span class="required-mark" aria-hidden="true">*</span></legend>
             <div class="evaluation-type-options">
               <label class="evaluation-type-option">
                 <input type="radio" name="submission_type" value="agent" required />
@@ -97,7 +131,7 @@
             </div>
           </fieldset>
           <div class="evaluation-form-footer">
-            <p id="evaluation-state" class="evaluation-message" role="status" aria-live="polite">Choose an agent or model to continue.</p>
+            <p id="evaluation-state" class="evaluation-message" role="status" aria-live="polite">Complete the required fields to submit your evaluation.</p>
             <button class="button primary" id="submit-evaluation" type="submit">Submit evaluation <span aria-hidden="true">↗</span></button>
           </div>
         </form>
@@ -152,12 +186,12 @@
     <footer class="site-footer">
       <div class="container footer-inner">
         <span>ReAct-Manip · 2026</span>
-        <span>Questions: <a href="mailto:hello@react-manip.org">hello@react-manip.org</a></span>
+        <span>Questions: <a href="mailto:wkm@qingyandata.com">wkm@qingyandata.com</a></span>
       </div>
     </footer>
     <script src="tasks.js?v=20261027-paper" defer></script>
-    <script src="demo-api.js?v=20261027-paper-r2" defer></script>
-    <script src="leaderboard.js?v=20261027-paper-r2" defer></script>
+    <script src="demo-api.js?v=20261028-submission" defer></script>
+    <script src="leaderboard.js?v=20261028-submission" defer></script>
     <script src="simulation-details.js?v=20261027-paper" defer></script>
   </body>
 </html>
