@@ -60,7 +60,7 @@
     try {
       const response = await fetch(`${context.config.base}/api/v1${path}`, { headers, signal: controller.signal, cache: 'no-store' });
       if (!response.ok) {
-        const messages = { 401: 'Sign in through Connection settings to view this record.', 403: 'This record is not available with your current access.', 404: 'This record is not available yet.', 429: 'Too many requests. Please try again shortly.' };
+        const messages = { 401: 'Please sign in to the evaluation service or contact the organizers.', 403: 'This record is not available with your current access.', 404: 'This record is not available yet.', 429: 'Too many requests. Please try again shortly.' };
         throw new Error(messages[response.status] || `Could not load this record (${response.status}).`);
       }
       let data;
@@ -183,7 +183,7 @@
         const latency = data.latency_ms ?? data.latency;
         const updated = data.updated_at ?? data.occurred_at ?? data.created_at;
         const values = [
-          ['Evaluation ID', context.id], ['Simulation ID', id], ['Recovery', recovery ?? '—'],
+          ['Task', taskName], ['Recovery', recovery ?? '—'],
           ['Latency', typeof latency === 'number' ? `${latency} ms` : latency ?? '—'], ['Updated', formatDate(updated)]
         ];
         for (const [label, value] of values) {

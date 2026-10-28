@@ -7,7 +7,7 @@
     <meta name="leaderboard-api" content="" />
     <meta name="leaderboard-id" content="react-manip-season-2026" />
     <title>Submit an evaluation · ReAct-Manip</title>
-    <link rel="stylesheet" href="styles.css?v=20261028-submission" />
+    <link rel="stylesheet" href="styles.css?v=20261028-policy" />
   </head>
   <body class="evaluation-page">
     <header class="site-header">
@@ -28,14 +28,14 @@
       <div class="evaluation-heading">
         <span class="eyebrow">ReAct-Manip · Leaderboard</span>
         <h1>Submit an evaluation</h1>
-        <p>Introduce your team and policy, add your contact details, and register your evaluation for the leaderboard.</p>
+        <p>Introduce your team and policy, add your contact details, and submit your policy for evaluation.</p>
       </div>
 
       <aside class="evaluation-demo" aria-labelledby="evaluation-demo-title">
         <div>
           <span class="submit-label">Interactive demo</span>
           <h2 id="evaluation-demo-title">Explore a sample evaluation</h2>
-          <p>Explore sample records, task videos, and evaluation details with <code>react_manip_test</code>. Demo scores are illustrative and are not benchmark results.</p>
+          <p>Explore sample policies, task videos, and evaluation details. Demo scores are illustrative and are not benchmark results.</p>
         </div>
         <div class="evaluation-demo-actions">
           <a class="button" href="submit.html?demo=1#records">Open demo records <span aria-hidden="true">↗</span></a>
@@ -47,20 +47,6 @@
         <button id="submission-tab" class="evaluation-tab" type="button" role="tab" aria-selected="true" aria-controls="submission-panel" tabindex="0" data-evaluation-tab="submission">Submit evaluation</button>
         <button id="records-tab" class="evaluation-tab" type="button" role="tab" aria-selected="false" aria-controls="records-panel" tabindex="-1" data-evaluation-tab="records">Evaluation records</button>
       </div>
-
-      <details id="connection-settings" class="evaluation-connection">
-        <summary>Connection settings</summary>
-        <div class="evaluation-fields connection-fields">
-          <label class="evaluation-field" for="leaderboard-api-url">
-            <span>Evaluation service URL <span class="required-mark" aria-hidden="true">*</span> <small>Demo: <code>https://demo.react-manip.local</code></small></span>
-            <input id="leaderboard-api-url" name="api_base_url" type="url" inputmode="url" placeholder="https://api.example.com" autocomplete="off" spellcheck="false" form="submission-form" required />
-          </label>
-          <label class="evaluation-field" for="leaderboard-token">
-            <span>Access token <small>optional</small></span>
-            <input id="leaderboard-token" name="bearer_token" type="password" placeholder="Short-lived token" autocomplete="off" form="submission-form" />
-          </label>
-        </div>
-      </details>
 
       <section id="submission-panel" class="evaluation-panel" role="tabpanel" aria-labelledby="submission-tab" tabindex="0">
         <div class="evaluation-panel-heading">
@@ -100,23 +86,18 @@
             </label>
           </div>
           <div class="submission-section-heading">
-            <h3>Evaluation details</h3>
-            <p>Link the evaluation provided by your evaluation service.</p>
+            <h3>Connection</h3>
           </div>
           <div class="evaluation-fields">
-            <label class="evaluation-field" for="leaderboard-id">
-              <span>Leaderboard <span class="required-mark" aria-hidden="true">*</span></span>
-              <input id="leaderboard-id" name="leaderboard_id" type="text" value="react-manip-season-2026" autocomplete="off" spellcheck="false" required />
+            <label class="evaluation-field" for="participant-api-url">
+              <span>URL <span class="required-mark" aria-hidden="true">*</span></span>
+              <input id="participant-api-url" name="participant_endpoint" type="url" inputmode="url" placeholder="https://example.com/v1" autocomplete="url" spellcheck="false" required />
             </label>
-            <label class="evaluation-field" for="evaluation-id">
-              <span>Evaluation ID <span class="required-mark" aria-hidden="true">*</span></span>
-              <input id="evaluation-id" name="evaluation_id" type="text" placeholder="eval_20261014_001" autocomplete="off" spellcheck="false" required />
+            <label class="evaluation-field" for="participant-api-key">
+              <span>API <small>optional</small></span>
+              <input id="participant-api-key" name="participant_api_key" type="password" placeholder="API key" autocomplete="off" spellcheck="false" />
             </label>
           </div>
-          <label class="evaluation-field evaluation-participant-api" for="participant-api-url">
-            <span>Policy API URL <small>optional for an existing evaluation</small></span>
-            <input id="participant-api-url" name="participant_endpoint" type="url" inputmode="url" placeholder="https://agent.example.com/v1" autocomplete="url" spellcheck="false" />
-          </label>
           <fieldset class="evaluation-type">
             <legend>Submission type <span class="required-mark" aria-hidden="true">*</span></legend>
             <div class="evaluation-type-options">
@@ -136,7 +117,7 @@
           </div>
         </form>
         <div id="submission-result" class="submission-result" hidden>
-          <div><span class="submit-label">Evaluation submitted</span><strong id="submitted-evaluation-id"></strong></div>
+          <div><span class="submit-label">Evaluation submitted</span><strong id="submitted-policy-name"></strong></div>
           <span id="submission-status"></span>
           <button id="view-evaluation-records" class="button" type="button">View evaluation records <span aria-hidden="true">↗</span></button>
         </div>
@@ -146,23 +127,23 @@
         <div class="evaluation-panel-heading">
           <span class="section-number">02 / Records</span>
           <h2>Evaluation records</h2>
-          <p>Enter a leaderboard ID to find its evaluations and check their status.</p>
+          <p>Find evaluations by policy name and open a policy to view its progress and results.</p>
         </div>
         <form id="records-form" class="evaluation-records-search">
-          <label class="evaluation-field" for="records-leaderboard-id">
-            <span>Leaderboard ID</span>
-            <input id="records-leaderboard-id" name="leaderboard_id" type="text" value="react-manip-season-2026" autocomplete="off" spellcheck="false" required />
+          <label class="evaluation-field" for="records-policy-name">
+            <span>Policy name <small>optional</small></span>
+            <input id="records-policy-name" name="policy_name" type="search" placeholder="Search by policy name" maxlength="100" autocomplete="off" spellcheck="false" />
           </label>
           <button class="button primary" id="load-evaluation-records" type="submit">Search records <span aria-hidden="true">↗</span></button>
         </form>
         <div class="evaluation-records-toolbar">
-          <p id="records-state" class="evaluation-message" role="status" aria-live="polite">Search by leaderboard ID to load evaluation records.</p>
+          <p id="records-state" class="evaluation-message" role="status" aria-live="polite">Search by policy name, or leave blank to view all available evaluations.</p>
           <span id="records-count">— records</span>
         </div>
         <div class="leaderboard-table-wrap" role="region" aria-label="Evaluation records table" tabindex="0">
           <table class="evaluation-records">
-            <thead><tr><th scope="col">Evaluation ID</th><th scope="col">Type</th><th scope="col">Status</th><th scope="col">Score</th></tr></thead>
-            <tbody id="evaluation-records-body"><tr class="leaderboard-empty"><td colspan="4"><strong>Find your evaluation history.</strong><small>Enter a leaderboard ID above, then select Search records.</small></td></tr></tbody>
+            <thead><tr><th scope="col">Policy name</th><th scope="col">Team name</th><th scope="col">Organization</th><th scope="col">Type</th><th scope="col">Status</th><th scope="col">Score</th></tr></thead>
+            <tbody id="evaluation-records-body"><tr class="leaderboard-empty"><td colspan="6"><strong>Find your evaluation history.</strong><small>Search by policy name to find your evaluations.</small></td></tr></tbody>
           </table>
         </div>
         <button id="records-load-more" class="button records-load-more" type="button" hidden>Load more</button>
@@ -190,8 +171,8 @@
       </div>
     </footer>
     <script src="tasks.js?v=20261027-paper" defer></script>
-    <script src="demo-api.js?v=20261028-submission" defer></script>
-    <script src="leaderboard.js?v=20261028-submission" defer></script>
-    <script src="simulation-details.js?v=20261027-paper" defer></script>
+    <script src="demo-api.js?v=20261028-policy" defer></script>
+    <script src="leaderboard.js?v=20261028-policy" defer></script>
+    <script src="simulation-details.js?v=20261028-policy" defer></script>
   </body>
 </html>
