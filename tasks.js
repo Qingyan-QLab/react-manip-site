@@ -6,7 +6,7 @@
   {
     "name": "phone_lean",
     "objective": "Stably lean a phone",
-    "image": "demo-20261030/task_01.jpg",
+    "image": "task_01.jpg",
     "video": "task_01_demo.mp4",
     "description": "Position a phone against a support and leave it in a stable leaning pose. Use contact and motion feedback to adjust the placement.",
     "condition": "Hidden dynamics and occluded state",
@@ -19,7 +19,7 @@
   {
     "name": "leveling_board",
     "objective": "Level a board with shims",
-    "image": "demo-20261030/task_02.jpg",
+    "image": "task_02.jpg",
     "video": "task_02_demo.mp4",
     "description": "Select and place shims to level a board. Use feedback from the board to revise the support arrangement and reach the required final angle.",
     "condition": "Occluded physical state",
@@ -32,7 +32,7 @@
   {
     "name": "rail_ball_to_cup",
     "objective": "Release a ball to a cup",
-    "image": "demo-20261030/task_03.jpg",
+    "image": "task_03.jpg",
     "video": "task_03_demo.mp4",
     "description": "Release a ball onto rails so that it travels along them, leaves the rail, and lands in a cup. Use the resulting trajectory to refine later attempts.",
     "condition": "Hidden dynamics",
@@ -43,7 +43,7 @@
   {
     "name": "pitch_pot",
     "objective": "Throw a ball into a pot",
-    "image": "demo-20261030/task_04.jpg",
+    "image": "task_04.jpg",
     "video": "task_04_demo.mp4",
     "description": "Throw a ball into a pot. Adjust the motion and release using feedback from previous throws; no further contact is allowed after release.",
     "condition": "Hidden dynamics",
@@ -54,7 +54,7 @@
   {
     "name": "conveyor_grasp",
     "objective": "Sort moving targets",
-    "image": "demo-20261030/task_05.jpg",
+    "image": "task_05.jpg",
     "video": "task_05_demo.mp4",
     "description": "Grasp moving targets from a conveyor and sort them by category. Completed targets earn partial credit; incorrect placements and unfinished targets affect the outcome.",
     "condition": "Hidden dynamics and occluded state",
@@ -65,7 +65,7 @@
   {
     "name": "curling_push",
     "objective": "Stop a stone in a target",
-    "image": "demo-20261030/task_06.jpg",
+    "image": "task_06.jpg",
     "video": "task_06_demo.mp4",
     "description": "Push and release a stone so that it stops inside the target. Contact is prohibited after release, so each outcome informs the next attempt.",
     "condition": "Hidden dynamics",
@@ -76,7 +76,7 @@
   {
     "name": "turntable_gamble",
     "objective": "Stop at a scoring sector",
-    "image": "demo-20261030/task_07.jpg",
+    "image": "task_07.jpg",
     "video": "task_07_demo.mp4",
     "description": "Set a turntable in motion and make it stop at a scoring sector. Use observed rotation and stopping behavior to adjust the next action.",
     "condition": "Hidden dynamics",
@@ -89,7 +89,7 @@
   {
     "name": "ring_toss",
     "objective": "Throw a ring onto posts",
-    "image": "demo-20261030/task_08.jpg",
+    "image": "task_08.jpg",
     "video": "task_08_demo.mp4",
     "description": "Throw a ring onto the scoring posts. Refine the release from observed trajectories. A positive score meets the success condition; the score also distinguishes the resulting placement.",
     "condition": "Hidden dynamics",
@@ -102,7 +102,7 @@
   {
     "name": "box_insertion",
     "objective": "Insert an asymmetric block",
-    "image": "demo-20261030/task_09.jpg",
+    "image": "task_09.jpg",
     "video": "task_09_demo.mp4",
     "description": "Push an asymmetric block into a slot while adjusting to friction and uneven mass distribution. The score combines final insertion progress and completion time.",
     "condition": "Hidden dynamics",
@@ -113,7 +113,7 @@
   {
     "name": "car_drive",
     "objective": "Drive through obstacles",
-    "image": "demo-20261030/task_10.jpg",
+    "image": "task_10.jpg",
     "video": "task_10_demo.mp4",
     "description": "Operate a joystick to drive a vehicle through obstacles and reach the goal. Use the observed vehicle response to adjust steering and throttle control.",
     "condition": "Hidden control mapping",
@@ -126,7 +126,7 @@
   {
     "name": "rope_hang",
     "objective": "Stably hang a chain",
-    "image": "demo-20261030/task_11.jpg",
+    "image": "task_11.jpg",
     "video": "task_11_demo.mp4",
     "description": "Manipulate a chain so that it hangs stably over a support. Account for its motion and contact response, and satisfy the final stability condition.",
     "condition": "Hidden dynamics",
@@ -137,7 +137,7 @@
   {
     "name": "pan_flip",
     "objective": "Flip and recapture a pie",
-    "image": "demo-20261030/task_12.jpg",
+    "image": "task_12.jpg",
     "video": "task_12_demo.mp4",
     "description": "Move a pan to toss and flip a pie, then recapture it in the pan. Adjust the motion using feedback from the toss, rotation, and landing.",
     "condition": "Hidden dynamics",
@@ -148,7 +148,7 @@
   {
     "name": "button_indicator_matching",
     "objective": "Match buttons to lights",
-    "image": "demo-20261030/task_13.jpg",
+    "image": "task_13.jpg",
     "video": "task_13_demo.mp4",
     "description": "Discover which buttons activate the indicator lights, then respond to the requested target sequence. Use observed button-light responses to select the correct actions.",
     "condition": "Hidden task mapping",
@@ -159,7 +159,7 @@
   {
     "name": "laptop_into_drawer",
     "objective": "Insert a laptop and close drawer",
-    "image": "demo-20261030/task_14.jpg",
+    "image": "task_14.jpg",
     "video": "task_14_demo.mp4",
     "description": "Place a laptop completely inside a drawer, close the drawer, and disengage the grippers. All three conditions are required for final success.",
     "condition": "Occluded physical state",
@@ -170,7 +170,7 @@
   {
     "name": "find_object_in_drawer",
     "objective": "Find and collect targets",
-    "image": "demo-20261030/task_15.jpg",
+    "image": "task_15.jpg",
     "video": "task_15_demo.mp4",
     "description": "Search the drawers and collect the requested objects in order. Completed targets earn partial credit. Object locations remain fixed while the order of five requested targets changes.",
     "condition": "Occluded physical state",
@@ -183,7 +183,7 @@
   {
     "name": "tilte_maze",
     "objective": "Guide a ball through a maze",
-    "image": "demo-20261030/task_16.jpg",
+    "image": "task_16.jpg",
     "video": "task_16_demo.mp4",
     "description": "Use a joystick to guide a ball through a maze. Adjust control from the ball response while avoiding penalty regions. Scoring records route progress and deducts route penalties.",
     "condition": "Hidden control mapping and dynamics",
