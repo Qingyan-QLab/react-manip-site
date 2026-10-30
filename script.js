@@ -87,6 +87,7 @@ const openTaskModal = (trigger) => {
     taskModalVideo.removeAttribute('src');
     taskModalVideo.hidden = !videoSource;
     if (videoSource) {
+      taskModalVideo.poster = previewImage?.getAttribute('src') || '';
       taskModalVideo.src = videoSource;
       taskModalVideo.load();
       if (!prefersReducedMotion) {
