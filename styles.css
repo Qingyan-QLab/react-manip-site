@@ -724,3 +724,26 @@ h2 { font-size: clamp(34px, 4vw, 46px); }
   #specification .task-overview-image-link { padding: 6px; border-radius: 8px; }
   #top #specification .episode-steps { grid-template-columns: minmax(0, 1fr); gap: 12px; }
 }
+
+/* Website V1: profile-separated scores and owner-scoped evaluation records. */
+.ranking-profile-field { max-width: 460px; margin: 18px 0; }
+.record-version { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+.live-leaderboard th:nth-child(1), .live-leaderboard td:nth-child(1) { width: 8%; }
+.live-leaderboard th:nth-child(2), .live-leaderboard td:nth-child(2) { width: 24%; }
+.live-leaderboard th:nth-child(3), .live-leaderboard td:nth-child(3) { width: 34%; text-align: left; }
+.live-leaderboard th:nth-child(4), .live-leaderboard td:nth-child(4) { width: 16%; text-align: left; }
+.live-leaderboard th:nth-child(5), .live-leaderboard td:nth-child(5) { width: 18%; text-align: right; }
+.evaluation-status[data-status="invalid"], .evaluation-status[data-status="cancelled"] { border-color: #f4d2ce; background: #fff1ef; color: #b42318; }
+.evaluation-records { min-width: 940px; }
+.evaluation-records th, .evaluation-records td { overflow-wrap: anywhere; }
+.task-results-table { min-width: 560px; width: 100%; border-collapse: collapse; }
+.task-results-table th, .task-results-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--line, #dce4ef); }
+.private-video { margin: 12px 0; border: 1px solid var(--line, #dce4ef); border-radius: 8px; padding: 14px; }
+.private-video summary { cursor: pointer; overflow-wrap: anywhere; }
+.private-video video { display: block; width: 100%; max-height: 480px; margin-top: 12px; background: #101827; }
+.private-video video[hidden] { display: none; }
+#record-detail-title, #record-submission-info { overflow-wrap: anywhere; }
+#record-submission-info { display: grid; grid-template-columns: minmax(90px, 140px) minmax(0, 1fr); gap: 6px 14px; margin: 16px 0; font-size: 13px; }
+#record-submission-info dt { color: var(--muted); }
+#record-submission-info dd { margin: 0; }
+@media (max-width: 600px) { .ranking-profile-field { max-width: 100%; } }

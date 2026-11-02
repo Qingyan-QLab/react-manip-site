@@ -1,166 +1,94 @@
-// Local fixture service for reviewing the complete evaluation disclosure flow
-// before the real evaluation service is available. The fixture is selected by
-// the explicit demo API base below, so the regular submission form can use the
-// same API detection path as a deployed evaluator.
+// Explicit browser-only fixture. No evaluator, website database or real model is contacted.
 (() => {
   'use strict';
-  const params = new URLSearchParams(window.location.search);
-  const demoMode = params.get('demo') === '1';
-  const demoApiBase = 'https://demo.react-manip.local';
-  window.REACT_MANIP_DEMO_API = demoApiBase;
-  window.REACT_MANIP_LEADERBOARD_DEMO_API = demoApiBase;
-  window.REACT_MANIP_LEADERBOARD_DEMO = demoMode;
-
-  // This value is deliberately non-secret and only exists to exercise the
-  // authenticated browser flow while the fixture is being reviewed.
-  const demoToken = 'demo-react-manip-token-2026';
-  window.REACT_MANIP_DEMO_BEARER_TOKEN = demoToken;
-  window.REACT_MANIP_DEMO_TOKEN = demoToken;
-  window.REACT_MANIP_LEADERBOARD_DEMO_TOKEN = demoToken;
-  const tokenInput = document.querySelector('#leaderboard-token');
-  if (demoMode && tokenInput && !tokenInput.value) tokenInput.value = demoToken;
-
-  const board = 'react-manip-season-2026';
-  const evaluationId = 'react_manip_test';
-  window.REACT_MANIP_DEMO_EVALUATION_ID = evaluationId;
-  const displayName = 'Sample Agent (Demo Data)';
+  if (new URLSearchParams(location.search).get('demo') !== '1') return;
+  const base = 'https://demo.react-manip.invalid';
+  const profile = 'demo-16x3x15-v1', now = () => Math.floor(Date.now() / 1000);
+  const copy = value => JSON.parse(JSON.stringify(value));
+  const metadata = new Map(), attempts = new Map(), polls = new Map();
+  const records = [{ evaluation_id: 'demo-evaluation-1', team_display_name: 'Demo team', model_id: 'sample-policy', model_version: 'v1', profile_id: profile,
+    status: 'COMPLETED', completed_episodes: 720, score: 83.25, score_kind: 'protocol', official_score: null, eligible_for_ranking: true,
+    finished_at: now(), videos_expires_at: now() + 7 * 86400, website_metadata: { organization: 'Demo lab', submission_type: 'agent' } }];
+  metadata.set(records[0].evaluation_id, { ...records[0].website_metadata, email: 'demo@example.com', contact_method: 'phone', contact_value: '+8613800000000' });
+  const tasks = window.REACT_MANIP_TASKS || [];
+  // Preserve the original repository-hosted video lookup, including GitHub Pages subpaths.
   const videoBase = new URL('videos/', window.location.href);
-  const simulations = window.REACT_MANIP_TASKS.map(({ id: number, name: task_name, video: file }, index) => ({
-    simulation_id: `${evaluationId}_sim_${number}`,
-    task_name,
-    task_id: number,
-    video_url: file ? new URL(file, videoBase).href : null,
-    metrics: {
-      recovery: Number((0.985 - index * 0.006).toFixed(3)),
-      latency_ms: 118 + index * 7,
-      updated_at: `2026-10-15T08:${String(12 + index).padStart(2, '0')}:00Z`,
-      success: true,
-      condition: index % 2 ? 'perturbed' : 'nominal',
-      seed: 2026 + index,
-      steps: 92 + index * 11,
-      episode_score: 100
-    }
-  }));
-  const runsForEvaluation = (id) => simulations.map((run) => ({
-    ...run,
-    simulation_id: `${id}_sim_${run.task_id}`
-  }));
-  const simulationSummaries = (id) => runsForEvaluation(id).map(({ simulation_id, task_name }) => ({
-    simulation_id,
-    task_name
-  }));
-  const evaluations = [{
-    evaluation_id: evaluationId,
-    submission_type: 'agent',
-    status: 'completed',
-    score: 100,
-    board_id: board,
-    display_name: displayName,
-    completed_at: '2026-10-15T08:30:00Z'
-  }];
-  // Contact information belongs to submission records, never public rankings.
-  const submissionContacts = new Map();
-
+  const taskRows = item => Array.from({ length: 16 }, (_, index) => ({ task_id: tasks[index]?.name || `task_${String(index + 1).padStart(2, '0')}`, status: item.status,
+    score: item.status === 'COMPLETED' ? item.score : null, completed_episodes: item.status === 'COMPLETED' ? 45 : 0, total_episodes: 45 }));
+  const videos = item => taskRows(item).map((task, index) => ({ artifact_id: `${item.evaluation_id}-video-${index + 1}`, task_id: task.task_id,
+    phase: 'exam', episode_index: 0, status: 'READY', expires_at: item.videos_expires_at }));
+  const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'private, no-store' } });
+  window.ReactManipDemo = Object.freeze({ base, mediaUrl: id => {
+    const match = /^demo-evaluation-\d+-video-(\d+)$/.exec(String(id));
+    if (!match || +match[1] < 1 || +match[1] > 16) throw new Error('Demo video not found.');
+    const file = tasks[Number(match[1]) - 1]?.video;
+    if (!file) throw new Error('Demo video not found.');
+    return new URL(file, videoBase).href;
+  } });
   const originalFetch = window.fetch.bind(window);
-  const json = (data, status = 200) => new Response(JSON.stringify(data), {
-    status,
-    headers: { 'Content-Type': 'application/json' }
-  });
-  const pathParts = (url) => new URL(url, window.location.href).pathname
-    .split('/').filter(Boolean).map(decodeURIComponent);
-  const copy = (value) => JSON.parse(JSON.stringify(value));
-
-  const readBody = async (input, init) => {
-    if (init && init.body !== undefined && init.body !== null) {
-      if (typeof init.body === 'string') {
-        try { return JSON.parse(init.body); } catch { return {}; }
-      }
-      if (typeof init.body === 'object') return init.body;
-    }
-    if (input && typeof input.clone === 'function') {
-      try { return await input.clone().json(); } catch { return {}; }
-    }
-    return {};
-  };
-
-  const saveSubmission = (payload) => {
-    const submittedId = String(payload?.evaluation_id || evaluationId).trim() || evaluationId;
-    const submittedType = payload?.submission_type === 'model' ? 'model' : 'agent';
-    const existing = evaluations.find((item) => item.evaluation_id === submittedId);
-    const record = existing || { evaluation_id: submittedId };
-    Object.assign(record, {
-      submission_type: submittedType,
-      status: 'completed',
-      score: 100,
-      board_id: board,
-      display_name: displayName,
-      completed_at: '2026-10-15T08:30:00Z'
-    });
-    record.team_name = payload.team_name.trim();
-    record.organization = payload.organization.trim();
-    record.policy_name = payload.policy_name.trim();
-    record.display_name = record.policy_name;
-    submissionContacts.set(submittedId, {
-      email: payload.email.trim(),
-      contact_method: payload.contact_method,
-      contact_value: payload.contact_value.trim()
-    });
-    if (typeof payload?.participant_endpoint === 'string' && payload.participant_endpoint.trim()) {
-      record.participant_endpoint = payload.participant_endpoint.trim();
-    }
-    if (!existing) evaluations.unshift(record);
-    return copy(record);
-  };
-
   window.fetch = async (input, init = {}) => {
-    const requestUrl = typeof input === 'string' ? input : input?.url;
-    const url = new URL(requestUrl, window.location.href);
-    const isDemoRequest = url.origin === new URL(demoApiBase).origin || (demoMode && url.origin === window.location.origin);
-    if (!isDemoRequest || !url.pathname.startsWith('/api/v1/')) return originalFetch(input, init);
-    const parts = pathParts(url);
-    const method = (init.method || (typeof input === 'object' && input?.method) || 'GET').toUpperCase();
-
-    if (parts[2] === 'leaderboards' && parts[4] === 'rankings' && method === 'GET') {
-      const ranked = evaluations.find((item) => item.evaluation_id === evaluationId) || evaluations[0];
-      return json({ rankings: [{
-        rank: 1,
-        submission_type: ranked?.submission_type || 'agent',
-        leaderboard_id: ranked?.display_name || displayName,
-        score: 100,
-        evaluation_id: ranked?.evaluation_id || evaluationId
-      }] });
+    const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url, location.href);
+    if (url.origin !== base) return originalFetch(input, init);
+    if (init.signal?.aborted) throw new DOMException('Request cancelled', 'AbortError');
+    const method = (init.method || input?.method || 'GET').toUpperCase(), path = url.pathname;
+    const headers = new Headers(init.headers || input?.headers);
+    if (method === 'POST' && headers.get('X-CSRF-Token') !== 'demo-csrf-not-a-secret') return json({ error: 'Session required' }, 403);
+    if (path === '/api/v1/session' && method === 'GET') return json({ csrf_token: 'demo-csrf-not-a-secret' });
+    if (path === '/api/v1/profiles' && method === 'GET') return json({ profiles: [{ profile_id: profile }] });
+    if (path === '/api/v1/rankings' && method === 'GET') {
+      if (url.searchParams.get('profile_id') && url.searchParams.get('profile_id') !== profile) return json({ error: 'Profile not found' }, 404);
+      const latest = new Map();
+      for (const item of records) if (item.status === 'COMPLETED' && item.eligible_for_ranking && !latest.has(item.team_display_name)) latest.set(item.team_display_name, item);
+      const rankings = [...latest.values()].sort((a, b) => b.score - a.score).map(item => ({ evaluation_id: item.evaluation_id, profile_id: profile,
+        team_display_name: item.team_display_name, model_id: item.model_id, model_version: item.model_version, status: item.status,
+        score: item.score, score_kind: 'protocol', official_score: null, eligible_for_ranking: true, website_metadata: { submission_type: item.website_metadata.submission_type } }));
+      return json({ profiles: [{ profile_id: profile }], profile_id: profile, rankings });
     }
-    if (parts[2] === 'leaderboards' && parts[4] === 'evaluations' && method === 'GET') {
-      return json({ evaluations: copy(evaluations), next_cursor: null });
+    if (path === '/api/v1/evaluations' && method === 'GET') {
+      const after = Number(url.searchParams.get('after') || 0), limit = Math.min(50, Number(url.searchParams.get('limit') || 50));
+      if (!Number.isInteger(after) || after < 0 || !Number.isInteger(limit) || limit < 1) return json({ error: 'Invalid pagination' }, 422);
+      return json({ evaluations: copy(records.slice(after, after + limit)), next_cursor: after + limit < records.length ? after + limit : null });
     }
-    if (parts[2] === 'leaderboards' && parts[4] === 'evaluations' && method === 'POST') {
-      const payload = await readBody(input, init);
-      const required = ['evaluation_id', 'team_name', 'organization', 'policy_name', 'email', 'contact_value'];
-      if (required.some((field) => typeof payload?.[field] !== 'string' || !payload[field].trim()) ||
-          !['agent', 'model'].includes(payload.submission_type) || !['phone', 'wechat'].includes(payload.contact_method)) {
-        return json({ error: 'Complete all required submission and contact fields.' }, 400);
+    if (path === '/api/v1/evaluations' && method === 'POST') {
+      let payload;
+      try { payload = typeof init.body === 'string' ? JSON.parse(init.body) : await input.clone().json(); } catch { return json({ error: 'Invalid request' }, 400); }
+      const evaluation = payload?.evaluation, details = payload?.website_metadata;
+      const fields = ['profile_id', 'team_display_name', 'model_id', 'model_version', 'model_endpoint', 'model_api_key'];
+      const metadataFields = ['organization', 'email', 'contact_method', 'contact_value', 'submission_type'];
+      if (!evaluation || Object.keys(evaluation).length !== 6 || fields.some(field => typeof evaluation[field] !== 'string' || !evaluation[field].trim()) ||
+          !details || metadataFields.some(field => typeof details[field] !== 'string' || !details[field].trim()) ||
+          !['agent', 'model'].includes(details.submission_type) || !['phone', 'wechat'].includes(details.contact_method) || evaluation.profile_id !== profile) return json({ error: 'Invalid submission' }, 422);
+      let endpoint;
+      try { endpoint = new URL(evaluation.model_endpoint); } catch { return json({ error: 'Invalid endpoint' }, 422); }
+      if (endpoint.protocol !== 'https:' || (endpoint.port && endpoint.port !== '443') || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) return json({ error: 'Invalid endpoint' }, 422);
+      const key = headers.get('Idempotency-Key');
+      if (!key || key.length > 128) return json({ error: 'Idempotency key required' }, 400);
+      const fingerprint = JSON.stringify(payload), previous = attempts.get(key);
+      if (previous) return previous.fingerprint === fingerprint ? json(copy(previous.record), 202) : json({ error: 'Idempotency conflict' }, 409);
+      const item = { evaluation_id: `demo-evaluation-${records.length + 1}`, profile_id: profile, team_display_name: evaluation.team_display_name,
+        model_id: evaluation.model_id, model_version: evaluation.model_version, status: 'QUEUED', completed_episodes: 0, score: null,
+        score_kind: 'protocol', official_score: null, eligible_for_ranking: false, finished_at: null, videos_expires_at: null,
+        website_metadata: { organization: details.organization, submission_type: details.submission_type } };
+      metadata.set(item.evaluation_id, copy(details)); records.unshift(item); polls.set(item.evaluation_id, 0);
+      attempts.set(key, { fingerprint, record: item }); return json(copy(item), 202);
+    }
+    const match = /^\/api\/v1\/evaluations\/([^/]+)(?:\/(tasks|videos|cancel))?$/.exec(path);
+    if (match) {
+      const item = records.find(record => record.evaluation_id === decodeURIComponent(match[1]));
+      if (!item) return json({ error: 'Not found' }, 404);
+      if (match[2] === 'cancel' && method === 'POST') {
+        if (['QUEUED', 'RUNNING'].includes(item.status)) Object.assign(item, { status: 'CANCELLED', finished_at: now(), videos_expires_at: now() + 7 * 86400 });
+        return json(copy(item));
       }
-      const record = saveSubmission(payload);
-      // Keep the demo on the same asynchronous path as a real evaluator:
-      // registration is accepted first, then the status lookup returns the
-      // completed sample when the UI polls it.
-      return json({ ...record, status: 'queued' }, 202);
-    }
-    if (parts[2] === 'evaluations' && parts.length === 4 && method === 'GET') {
-      const found = evaluations.find((item) => item.evaluation_id === parts[3]);
-      return found ? json(copy(found)) : json({ error: 'Evaluation not found' }, 404);
-    }
-    if (parts[2] === 'evaluations' && parts[4] === 'simulations' && parts.length === 5 && method === 'GET') {
-      const found = evaluations.find((item) => item.evaluation_id === parts[3]);
-      return found ? json({ simulations: copy(simulationSummaries(parts[3])), next_cursor: null }) : json({ error: 'Evaluation not found' }, 404);
-    }
-    if (parts[2] === 'evaluations' && parts[4] === 'simulations' && parts.length === 6 && method === 'GET') {
-      const run = runsForEvaluation(parts[3]).find((item) => item.simulation_id === parts[5]);
-      return run ? json({ simulation_id: run.simulation_id, video_url: run.video_url }) : json({ error: 'Simulation not found' }, 404);
-    }
-    if (parts[2] === 'evaluations' && parts[4] === 'simulations' && parts[6] === 'metrics' && method === 'GET') {
-      const run = runsForEvaluation(parts[3]).find((item) => item.simulation_id === parts[5]);
-      return run ? json({ metrics: copy(run.metrics) }) : json({ error: 'Simulation not found' }, 404);
+      if (method !== 'GET') return json({ error: 'Method not allowed' }, 405);
+      if (match[2] === 'tasks') return json({ tasks: taskRows(item) });
+      if (match[2] === 'videos') return json({ videos: item.status === 'COMPLETED' ? videos(item) : [], next_cursor: null });
+      if (polls.has(item.evaluation_id) && ['QUEUED', 'RUNNING'].includes(item.status)) {
+        const count = polls.get(item.evaluation_id) + 1; polls.set(item.evaluation_id, count);
+        Object.assign(item, count < 2 ? { status: 'RUNNING', completed_episodes: 240 } : { status: 'COMPLETED', completed_episodes: 720, score: 84.5,
+          eligible_for_ranking: true, finished_at: now(), videos_expires_at: now() + 7 * 86400 });
+      }
+      return json({ ...copy(item), website_metadata: copy(metadata.get(item.evaluation_id)) });
     }
     return json({ error: 'Demo endpoint not found' }, 404);
   };

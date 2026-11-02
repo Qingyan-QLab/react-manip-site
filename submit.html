@@ -3,176 +3,142 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Submit an agent or model evaluation to the ReAct-Manip leaderboard and look up evaluation records." />
-    <meta name="leaderboard-api" content="" />
-    <meta name="leaderboard-id" content="react-manip-season-2026" />
-    <title>Submit an evaluation · ReAct-Manip</title>
-    <link rel="stylesheet" href="styles.css?v=20261030-uniform-tasks" />
+    <meta name="description" content="Submit a ReAct-Manip model evaluation and find your private evaluation records by team name." />
+    <meta name="website-api" content="" />
+    <title>Submit an evaluation — ReAct-Manip</title>
+    <link rel="stylesheet" href="styles.css?v=20261102-v1" />
   </head>
   <body class="evaluation-page">
     <header class="site-header">
       <div class="container header-inner">
         <a class="brand" href="index.html#top">ReAct-Manip</a>
         <nav aria-label="Primary navigation">
-          <a href="index.html#background">Background</a>
-          <a href="index.html#specification">Task Specification</a>
-          <a href="index.html#task-catalog">16 Tasks</a>
-          <a href="index.html#leaderboard">Leaderboard</a>
-          <a href="index.html#citation">Cite</a>
+          <a href="index.html#background">Background</a><a href="index.html#specification">Task Specification</a>
+          <a href="index.html#task-catalog">16 Tasks</a><a href="index.html#leaderboard">Leaderboard</a><a href="index.html#citation">Cite</a>
         </nav>
       </div>
     </header>
-
     <main class="evaluation-main container" id="top">
-      <a class="evaluation-back" href="index.html#leaderboard"><span aria-hidden="true">←</span> Back to leaderboard</a>
+      <a class="evaluation-back" href="index.html#leaderboard">← Back to leaderboard</a>
       <div class="evaluation-heading">
-        <span class="eyebrow">ReAct-Manip · Leaderboard</span>
+        <span class="eyebrow">ReAct-Manip · Evaluation</span>
         <h1>Submit an evaluation</h1>
-        <p>Introduce your team and policy, add your contact details, and submit your policy for evaluation.</p>
+        <p>One evaluation runs 16 tasks × 3 instances × 15 episodes: 720 episodes in total, including 240 scored exam episodes.</p>
       </div>
-
       <aside class="evaluation-demo" aria-labelledby="evaluation-demo-title">
         <div>
           <span class="submit-label">Interactive demo</span>
           <h2 id="evaluation-demo-title">Explore a sample evaluation</h2>
-          <p>Explore sample policies, task videos, and evaluation details. Demo scores are illustrative and are not benchmark results.</p>
+          <p id="demo-description">Demo results and videos are illustrative. They do not run the evaluator or count as benchmark results.</p>
         </div>
         <div class="evaluation-demo-actions">
-          <a class="button" href="submit.html?demo=1#records">Open demo records <span aria-hidden="true">↗</span></a>
-          <a class="button primary" href="submit.html?demo=1#submission">Try demo submission <span aria-hidden="true">↗</span></a>
+          <a class="button" href="submit.html?demo=1#records">Open demo records ↗</a>
+          <a class="button primary" href="submit.html?demo=1#submission">Try demo submission ↗</a>
         </div>
       </aside>
-
+      <p class="evaluation-message" id="service-state" role="status">Private records and videos are available only to the submitting account.</p>
       <div class="evaluation-tabs" role="tablist" aria-label="Evaluation options">
         <button id="submission-tab" class="evaluation-tab" type="button" role="tab" aria-selected="true" aria-controls="submission-panel" tabindex="0" data-evaluation-tab="submission">Submit evaluation</button>
         <button id="records-tab" class="evaluation-tab" type="button" role="tab" aria-selected="false" aria-controls="records-panel" tabindex="-1" data-evaluation-tab="records">Evaluation records</button>
       </div>
-
       <section id="submission-panel" class="evaluation-panel" role="tabpanel" aria-labelledby="submission-tab" tabindex="0">
         <div class="evaluation-panel-heading">
-          <span class="section-number">01 / Submission</span>
-          <h2>Your submission</h2>
-          <p>Fields marked <span class="required-mark" aria-hidden="true">*</span> are required.</p>
+          <span class="section-number">01 / Submission</span><h2>Your submission</h2>
+          <p>Evaluation and team information are required. Scores are protocol trial results, not official benchmark scores.</p>
         </div>
         <form id="submission-form">
           <div class="evaluation-fields submission-profile">
-            <label class="evaluation-field" for="team-name">
-              <span>Team name <span class="required-mark" aria-hidden="true">*</span></span>
-              <input id="team-name" name="team_name" type="text" placeholder="Your team name" maxlength="100" autocomplete="off" required />
+            <label class="evaluation-field" for="team-name"><span>Team name <span class="required-mark" aria-hidden="true">*</span></span>
+              <input id="team-name" name="team_display_name" type="text" placeholder="Your team name" maxlength="120" autocomplete="off" required />
+              <small class="field-hint">Use this team name to find your evaluation records.</small>
             </label>
-            <label class="evaluation-field" for="organization">
-              <span>Organization <span class="required-mark" aria-hidden="true">*</span></span>
+            <label class="evaluation-field" for="model-id"><span>Model / policy name <span class="required-mark" aria-hidden="true">*</span></span>
+              <input id="model-id" name="model_id" type="text" placeholder="my-policy" maxlength="120" autocomplete="off" spellcheck="false" required />
+            </label>
+            <label class="evaluation-field" for="model-version"><span>Model version <span class="required-mark" aria-hidden="true">*</span></span>
+              <input id="model-version" name="model_version" type="text" placeholder="v1" maxlength="120" autocomplete="off" required />
+            </label>
+            <label class="evaluation-field" for="evaluation-profile"><span>Evaluation profile <span class="required-mark" aria-hidden="true">*</span></span>
+              <select id="evaluation-profile" name="profile_id" required disabled><option value="">No published profiles loaded</option></select>
+              <small class="field-hint">Choose a published evaluation version. Results from different profiles are kept separate.</small>
+            </label>
+            <label class="evaluation-field" for="participant-api-url"><span>Model HTTPS URL <span class="required-mark" aria-hidden="true">*</span></span>
+              <input id="participant-api-url" name="model_endpoint" type="url" placeholder="https://model.example/evaluate" autocomplete="off" spellcheck="false" required />
+              <small class="field-hint">Public HTTPS on port 443. Your model must support the remote v2 lifecycle protocol.</small>
+            </label>
+            <label class="evaluation-field" for="participant-api-key"><span>Model API key <span class="required-mark" aria-hidden="true">*</span></span>
+              <input id="participant-api-key" name="model_api_key" type="password" placeholder="Model service API key" autocomplete="off" spellcheck="false" required />
+              <small class="field-hint">Sent securely with the submission. Never put the key in the URL.</small>
+            </label>
+          </div>
+          <div class="submission-section-heading"><h3>Team and contact information</h3></div>
+          <div class="evaluation-fields submission-profile">
+            <label class="evaluation-field" for="organization"><span>Organization <span class="required-mark" aria-hidden="true">*</span></span>
               <input id="organization" name="organization" type="text" placeholder="University, company, or independent" maxlength="150" autocomplete="organization" required />
             </label>
-            <label class="evaluation-field" for="policy-name">
-              <span>Policy name <span class="required-mark" aria-hidden="true">*</span></span>
-              <input id="policy-name" name="policy_name" type="text" placeholder="my_policy_v1" maxlength="100" autocomplete="off" spellcheck="false" required />
+            <label class="evaluation-field" for="model-category"><span>Model category <span class="required-mark" aria-hidden="true">*</span></span>
+              <select id="model-category" name="submission_type" required><option value="">Choose a category</option><option value="agent">Agent</option><option value="model">Model</option></select>
             </label>
-            <label class="evaluation-field" for="contact-email">
-              <span>Email <span class="required-mark" aria-hidden="true">*</span></span>
+            <label class="evaluation-field" for="contact-email"><span>Email <span class="required-mark" aria-hidden="true">*</span></span>
               <input id="contact-email" name="email" type="email" placeholder="you@example.com" maxlength="254" autocomplete="email" required />
             </label>
-            <label class="evaluation-field" for="contact-method">
-              <span>Contact method <span class="required-mark" aria-hidden="true">*</span></span>
-              <select id="contact-method" name="contact_method" required>
-                <option value="phone">Phone number / 手机号</option>
-                <option value="wechat">WeChat / 微信</option>
-              </select>
+            <label class="evaluation-field" for="contact-method"><span>Contact method <span class="required-mark" aria-hidden="true">*</span></span>
+              <select id="contact-method" name="contact_method" required><option value="phone">Phone number / 手机号</option><option value="wechat">WeChat / 微信</option></select>
             </label>
-            <label class="evaluation-field" for="contact-value">
-              <span><span id="contact-value-label">Phone number</span> <span class="required-mark" aria-hidden="true">*</span></span>
+            <label class="evaluation-field" for="contact-value"><span><span id="contact-value-label">Phone number</span> <span class="required-mark" aria-hidden="true">*</span></span>
               <input id="contact-value" name="contact_value" type="tel" inputmode="tel" placeholder="+86 138 0000 0000" maxlength="40" autocomplete="tel" aria-describedby="contact-value-hint" required />
               <small id="contact-value-hint" class="field-hint">Include the country code for international numbers.</small>
             </label>
           </div>
-          <div class="submission-section-heading">
-            <h3>Connection</h3>
-          </div>
-          <div class="evaluation-fields">
-            <label class="evaluation-field" for="participant-api-url">
-              <span>URL <span class="required-mark" aria-hidden="true">*</span></span>
-              <input id="participant-api-url" name="participant_endpoint" type="url" inputmode="url" placeholder="https://example.com/v1" autocomplete="url" spellcheck="false" required />
-            </label>
-            <label class="evaluation-field" for="participant-api-key">
-              <span>API <small>optional</small></span>
-              <input id="participant-api-key" name="participant_api_key" type="password" placeholder="API key" autocomplete="off" spellcheck="false" />
-            </label>
-          </div>
-          <fieldset class="evaluation-type">
-            <legend>Submission type <span class="required-mark" aria-hidden="true">*</span></legend>
-            <div class="evaluation-type-options">
-              <label class="evaluation-type-option">
-                <input type="radio" name="submission_type" value="agent" required />
-                <span><strong>Agent</strong><small>The evaluation is for an agent.</small></span>
-              </label>
-              <label class="evaluation-type-option">
-                <input type="radio" name="submission_type" value="model" required />
-                <span><strong>Model</strong><small>The evaluation is for a model.</small></span>
-              </label>
-            </div>
-          </fieldset>
           <div class="evaluation-form-footer">
-            <p id="evaluation-state" class="evaluation-message" role="status" aria-live="polite">Complete the required fields to submit your evaluation.</p>
-            <button class="button primary" id="submit-evaluation" type="submit">Submit evaluation <span aria-hidden="true">↗</span></button>
+            <p id="evaluation-state" class="evaluation-message" role="status" aria-live="polite">Loading published evaluation profiles…</p>
+            <button class="button primary" id="submit-evaluation" type="submit" disabled>Submit evaluation ↗</button>
           </div>
         </form>
         <div id="submission-result" class="submission-result" hidden>
-          <div><span class="submit-label">Evaluation submitted</span><strong id="submitted-policy-name"></strong></div>
+          <div><span class="submit-label">Evaluation submitted</span><strong id="submitted-team-name"></strong></div>
           <span id="submission-status"></span>
-          <button id="view-evaluation-records" class="button" type="button">View evaluation records <span aria-hidden="true">↗</span></button>
+          <button id="view-evaluation-records" class="button" type="button">View team records ↗</button>
         </div>
       </section>
-
       <section id="records-panel" class="evaluation-panel" role="tabpanel" aria-labelledby="records-tab" tabindex="0" hidden>
         <div class="evaluation-panel-heading">
-          <span class="section-number">02 / Records</span>
-          <h2>Evaluation records</h2>
-          <p>Find evaluations by policy name and open a policy to view its progress and results.</p>
+          <span class="section-number">02 / Records</span><h2>Evaluation records</h2>
+          <p>Find your evaluations by team name. Private records and videos remain restricted to the submitting account.</p>
         </div>
         <form id="records-form" class="evaluation-records-search">
-          <label class="evaluation-field" for="records-policy-name">
-            <span>Policy name <small>optional</small></span>
-            <input id="records-policy-name" name="policy_name" type="search" placeholder="Search by policy name" maxlength="100" autocomplete="off" spellcheck="false" />
+          <label class="evaluation-field" for="records-team-name"><span>Team name <span class="required-mark" aria-hidden="true">*</span></span>
+            <input id="records-team-name" name="team_name" type="search" placeholder="Enter your team name" maxlength="120" autocomplete="off" required />
           </label>
-          <button class="button primary" id="load-evaluation-records" type="submit">Search records <span aria-hidden="true">↗</span></button>
+          <button class="button primary" id="load-evaluation-records" type="submit">Search records ↗</button>
         </form>
-        <div class="evaluation-records-toolbar">
-          <p id="records-state" class="evaluation-message" role="status" aria-live="polite">Search by policy name, or leave blank to view all available evaluations.</p>
-          <span id="records-count">— records</span>
-        </div>
+        <div class="evaluation-records-toolbar"><p id="records-state" class="evaluation-message" role="status" aria-live="polite">Enter a team name to search your records.</p><span id="records-count">— records</span></div>
         <div class="leaderboard-table-wrap" role="region" aria-label="Evaluation records table" tabindex="0">
-          <table class="evaluation-records">
-            <thead><tr><th scope="col">Policy name</th><th scope="col">Team name</th><th scope="col">Organization</th><th scope="col">Type</th><th scope="col">Status</th><th scope="col">Score</th></tr></thead>
-            <tbody id="evaluation-records-body"><tr class="leaderboard-empty"><td colspan="6"><strong>Find your evaluation history.</strong><small>Search by policy name to find your evaluations.</small></td></tr></tbody>
+          <table class="evaluation-records"><thead><tr><th scope="col">Team name</th><th scope="col">Model</th><th scope="col">Profile</th><th scope="col">Category</th><th scope="col">Organization</th><th scope="col">Status</th><th scope="col">Protocol score</th></tr></thead>
+            <tbody id="evaluation-records-body"><tr class="leaderboard-empty"><td colspan="7"><strong>Find your evaluation history.</strong><small>Search by team name to find your evaluations.</small></td></tr></tbody>
           </table>
         </div>
-        <button id="records-load-more" class="button records-load-more" type="button" hidden>Load more</button>
+        <button id="records-load-more" class="button records-load-more" type="button" hidden>Search next page</button>
         <div id="record-detail" class="record-detail" role="region" aria-labelledby="record-detail-title" tabindex="-1" hidden>
-          <span class="submit-label">Evaluation details</span>
-          <h3 id="record-detail-title"></h3>
+          <span class="submit-label">Evaluation details</span><h3 id="record-detail-title"></h3>
           <p id="record-detail-state" class="evaluation-message" role="status" aria-live="polite"></p>
-          <details id="simulation-records" class="simulation-records">
-            <summary>Simulation records</summary>
-            <div class="simulation-records-content">
-              <p id="simulation-records-state" class="evaluation-message" role="status" aria-live="polite">Open to view simulation runs for this evaluation.</p>
-              <div id="simulation-records-list"></div>
-              <button type="button" id="simulations-load-more" class="button" hidden>Load more runs</button>
-            </div>
+          <p id="record-media-expiry" class="field-hint"></p>
+          <button id="cancel-evaluation" type="button" class="button" hidden>Cancel evaluation</button>
+          <details id="task-records" class="simulation-records"><summary>Task results</summary>
+            <div class="simulation-records-content"><p id="tasks-state" class="evaluation-message" role="status"></p><div id="task-records-list"></div></div>
+          </details>
+          <details id="video-records" class="simulation-records"><summary>Private evaluation videos</summary>
+            <div class="simulation-records-content"><p id="videos-state" class="evaluation-message" role="status"></p><div id="video-records-list"></div><button id="videos-load-more" type="button" class="button" hidden>Load more videos</button></div>
           </details>
         </div>
       </section>
       <noscript><p class="evaluation-message">Enable JavaScript to submit evaluations and search records.</p></noscript>
     </main>
-
-    <footer class="site-footer">
-      <div class="container footer-inner">
-        <span>ReAct-Manip · 2026</span>
-        <span>Questions: <a href="mailto:wkm@qingyandata.com">wkm@qingyandata.com</a></span>
-      </div>
-    </footer>
+    <footer class="site-footer"><div class="container footer-inner"><span>ReAct-Manip · 2026</span><span>Questions: <a href="mailto:wkm@qingyandata.com">wkm@qingyandata.com</a></span></div></footer>
     <script src="tasks.js?v=20261030-demo" defer></script>
-    <script src="demo-api.js?v=20261028-policy" defer></script>
-    <script src="leaderboard.js?v=20261028-policy" defer></script>
-    <script src="simulation-details.js?v=20261028-policy" defer></script>
+    <script src="demo-api.js?v=20261102-v1" defer></script>
+    <script src="evaluation-api.js?v=20261102-v1" defer></script>
+    <script src="leaderboard.js?v=20261102-v1" defer></script>
+    <script src="simulation-details.js?v=20261102-v1" defer></script>
   </body>
 </html>

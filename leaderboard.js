@@ -1,446 +1,257 @@
-// The browser submits policies, never scores. The evaluator owns
-// validation and ranking updates; see leaderboard_frontend_contract.md.
+// Website metadata is stored by the website; evaluation contains the evaluator's six fields.
 (() => {
   'use strict';
-  const $ = (selector) => document.querySelector(selector);
-  const storageKey = 'react-manip.leaderboard.connection';
-  const defaultBoard = $('meta[name="leaderboard-id"]')?.content || 'react-manip-season-2026';
-  const demoMode = window.REACT_MANIP_LEADERBOARD_DEMO === true;
-  const configuredApi = ($('meta[name="leaderboard-api"]')?.content || window.REACT_MANIP_LEADERBOARD_API || '').trim().replace(/\/+$/, '');
-  const fixedApi = demoMode ? '' : configuredApi;
-  const demoApi = String(window.REACT_MANIP_LEADERBOARD_DEMO_API || window.REACT_MANIP_DEMO_API || '').trim().replace(/\/+$/, '');
-  let saved = {};
-  try { saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}') || {}; } catch { /* Storage may be unavailable. */ }
-  const recordsPolicyInput = $('#records-policy-name');
-  const form = $('#submission-form');
-  const participantApiInput = $('#participant-api-url');
-  const participantKeyInput = $('#participant-api-key');
-  const contactMethodInput = $('#contact-method');
-  const contactValueInput = $('#contact-value');
-  const profileFields = ['team_name', 'organization', 'policy_name', 'email', 'contact_method', 'contact_value'];
-  const rankingBody = $('#leaderboard-body');
-  const initialBoard = defaultBoard;
-  const controllers = new Map();
-  const timers = new Map();
-  const activeEvaluations = new Map();
-  let submitting = false;
-  let records = [];
-  let recordsConfig;
-  let nextCursor = null;
-  let submittedConfig;
-  let submittedId;
-  let recordsPolicy = '';
-  let submissionAttempt;
-
-  if (demoMode && form) {
-    participantApiInput.value = 'https://policy.example.com/v1';
-    const demoProfile = { team_name: 'Demo team', organization: 'Independent', policy_name: 'sample_policy_v1', email: 'demo@example.com', contact_method: 'wechat', contact_value: 'demo_contact' };
-    for (const [name, value] of Object.entries(demoProfile)) form.elements.namedItem(name).value = value;
-    const demoType = form.querySelector('input[name="submission_type"][value="agent"]');
-    if (demoType) demoType.checked = true;
-  }
-  const submitUrl = () => `submit.html${demoMode ? '?demo=1' : ''}`;
-  if ($('#leaderboard-submit-link')) $('#leaderboard-submit-link').href = submitUrl(initialBoard);
-
-  const escapeText = (value) => String(value ?? '—').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-  const typeLabel = (value) => ({ agent: 'Agent', model: 'Model' }[String(value).toLowerCase()] || '—');
-  const policyName = (row) => [row.policy_name, row.display_name, row.name].find(value => typeof value === 'string' && value.trim())?.trim() || 'Unnamed policy';
-  const statusOf = (item) => String(item.status || item.state || 'unknown').toLowerCase();
-  const succeeded = (state) => ['completed', 'succeeded', 'finished', 'success'].includes(state);
-  const failed = (state) => ['failed', 'error', 'cancelled', 'canceled', 'rejected'].includes(state);
-  const terminal = (state) => succeeded(state) || failed(state);
-  const badge = (state) => `<span class="evaluation-status" data-status="${succeeded(state) ? 'completed' : failed(state) ? 'failed' : 'pending'}">${escapeText(state)}</span>`;
-  const setMessage = (element, message, state = '') => {
-    if (!element) return;
-    element.textContent = message;
-    element.dataset.state = state;
+  const api = window.ReactManipAPI, $ = selector => document.querySelector(selector);
+  const form = $('#submission-form'), teamSearch = $('#records-team-name');
+  const controllers = new Map(), timers = new Map(), active = new Map(), profiles = new Set();
+  let records = [], nextCursor = null, searchedTeam = '', selected = null, submittedTeam = '', submitting = false, memoryAttempt;
+  const escape = value => String(value ?? '—').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+  const category = value => ({ agent: 'Agent', model: 'Model' }[value] || '—');
+  const message = (node, text, error = false) => { if (node) { node.textContent = text; node.dataset.state = error ? 'error' : ''; } };
+  const badge = item => `<span class="evaluation-status" data-status="${escape(api.status(item).toLowerCase())}">${escape(api.status(item) || 'UNKNOWN')}</span>`;
+  const idOf = item => String(item?.evaluation_id || item?.id || '');
+  const stop = name => { clearTimeout(timers.get(name)); controllers.get(name)?.abort(); controllers.delete(name); };
+  const begin = name => { stop(name); const controller = new AbortController(); controllers.set(name, controller); return controller; };
+  const clearDetail = () => {
+    selected = null; active.delete('detail'); stop('detail'); stop('cancel');
+    if ($('#record-detail')) $('#record-detail').hidden = true;
+    document.dispatchEvent(new Event('evaluation-details-reset'));
   };
-  const validateProfileField = (input) => {
-    const value = input.value.trim();
-    let error = '';
-    if (!value) error = 'Please complete this required field.';
-    else if (input.maxLength > 0 && value.length > input.maxLength) error = `Use no more than ${input.maxLength} characters.`;
-    else if (input === contactMethodInput && !['phone', 'wechat'].includes(value)) error = 'Choose Phone number or WeChat.';
-    else if (input === contactValueInput) {
-      if (contactMethodInput.value === 'phone') {
-        const number = value.replace(/[\s().-]/g, '');
-        if (!/^\+?\d{7,15}$/.test(number)) error = 'Enter a phone number with 7–15 digits, including the country code when needed.';
-      } else if (/\s/.test(value)) error = 'Enter your WeChat ID without spaces.';
-    }
-    input.setCustomValidity(error);
-    if (input.hasAttribute('aria-invalid')) input.setAttribute('aria-invalid', String(!input.validity.valid));
-  };
-  if (form && contactMethodInput && contactValueInput) {
-    let currentMethod = contactMethodInput.value;
-    const contactDrafts = {};
-    const updateContactField = () => {
-      const phone = contactMethodInput.value === 'phone';
-      $('#contact-value-label').textContent = phone ? 'Phone number' : 'WeChat ID';
-      contactValueInput.type = phone ? 'tel' : 'text';
-      contactValueInput.inputMode = phone ? 'tel' : 'text';
-      contactValueInput.autocomplete = phone ? 'tel' : 'off';
-      contactValueInput.maxLength = phone ? 40 : 64;
-      contactValueInput.placeholder = phone ? '+86 138 0000 0000' : 'Your WeChat ID';
-      $('#contact-value-hint').textContent = phone ? 'Include the country code for international numbers.' : 'Enter your WeChat ID, rather than your display name.';
-      contactValueInput.setCustomValidity('');
-      contactValueInput.removeAttribute('aria-invalid');
-    };
-    updateContactField();
-    contactMethodInput.addEventListener('change', () => {
-      contactDrafts[currentMethod] = contactValueInput.value;
-      currentMethod = contactMethodInput.value;
-      contactValueInput.value = contactDrafts[currentMethod] || '';
-      updateContactField();
-    });
-    for (const name of profileFields) {
-      const input = form.elements.namedItem(name);
-      input.addEventListener('input', () => validateProfileField(input));
-    }
-    form.addEventListener('invalid', (event) => {
-      event.target.setAttribute('aria-invalid', 'true');
-      setMessage($('#evaluation-state'), 'Please check the required fields and contact details.', 'error');
-    }, true);
-  }
-  const getSubmissionProfile = () => {
-    for (const name of profileFields) validateProfileField(form.elements.namedItem(name));
-    if (!form.reportValidity()) return null;
-    const profile = Object.fromEntries(profileFields.map((name) => [name, form.elements.namedItem(name).value.trim()]));
-    if (profile.contact_method === 'phone') profile.contact_value = profile.contact_value.replace(/[\s().-]/g, '');
-    return profile;
-  };
-  const getConfig = () => {
-    const base = demoMode ? demoApi : fixedApi;
-    if (!base) throw new Error('Online evaluation is not available yet.');
-    let url;
-    try { url = new URL(base); } catch { throw new Error('The evaluation service is not configured correctly. Please contact the organizers.'); }
-    if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
-      throw new Error('The evaluation service is not configured correctly. Please contact the organizers.');
-    }
-    const token = demoMode ? window.REACT_MANIP_LEADERBOARD_DEMO_TOKEN || '' : window.REACT_MANIP_LEADERBOARD_TOKEN || (saved.base === base ? saved.token || '' : '');
-    return { base, board: initialBoard, token };
-  };
-  const getParticipantEndpoint = () => {
-    const value = (participantApiInput?.value || '').trim();
-    if (!value) throw new Error('Enter your policy endpoint URL.');
-    let url;
-    try { url = new URL(value); } catch { throw new Error('Enter a valid HTTP or HTTPS endpoint URL for your policy.'); }
-    if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
-      throw new Error('Use an HTTP or HTTPS endpoint URL without credentials, a query, or a fragment. Put the access key in the separate API key field.');
-    }
-    return url.href.replace(/\/+$/, '');
-  };
-  const isDemoApi = (value) => {
-    if (!demoApi) return false;
-    try { return new URL(String(value).trim()).origin === new URL(demoApi).origin; } catch { return false; }
-  };
-  const remember = (config) => {
-    saved = { ...config };
-    // Session-only storage keeps navigation working for authenticated boards.
-    // Credentials are never put in links or persistent localStorage.
-    try { sessionStorage.setItem(storageKey, JSON.stringify(saved)); } catch { /* The current page still works. */ }
-  };
-  const stop = (channel) => {
-    clearTimeout(timers.get(channel));
-    controllers.get(channel)?.abort();
-    controllers.delete(channel);
-  };
-  const begin = (channel) => {
-    stop(channel);
-    const controller = new AbortController();
-    controllers.set(channel, controller);
-    return controller;
-  };
-  const cancelEvaluation = (target) => {
-    activeEvaluations.delete(target);
-    stop(`evaluation-${target}`);
-  };
-  const request = async (path, config, controller, body, idempotencyKey) => {
-    let timedOut = false;
-    const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 15000);
-    const headers = { Accept: 'application/json' };
-    if (config.token) headers.Authorization = /^bearer /i.test(config.token) ? config.token : `Bearer ${config.token}`;
-    if (body) headers['Content-Type'] = 'application/json';
-    if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
-    try {
-      const response = await fetch(`${config.base}/api/v1${path}`, {
-        method: body ? 'POST' : 'GET', headers, cache: 'no-store', signal: controller.signal,
-        ...(body ? { body: JSON.stringify(body) } : {})
-      });
-      if (!response.ok) {
-        const hints = { 400: 'The submission was not accepted. Check your policy and contact details.', 401: 'Please sign in to the evaluation service or contact the organizers.', 403: 'You do not have access to this evaluation.', 404: 'The requested evaluation service or record is unavailable.', 409: 'This submission conflicts with an existing evaluation. Check Evaluation records.', 422: 'The submission could not be validated. Check your policy and contact details.', 429: 'Too many requests. Please try again shortly.' };
-        throw new Error(hints[response.status] || `The evaluation service returned an error (${response.status}). Please try again.`);
-      }
-      try { return await response.json(); } catch (error) {
-        if (controller.signal.aborted) throw error;
-        throw new Error('The evaluation service returned an invalid response.');
-      }
-    } catch (error) {
-      if (timedOut) throw new Error('The evaluation service took too long to respond. Please try again.');
-      if (error.name === 'TypeError') throw new Error('Could not reach the evaluation service. Check the API URL and connection.');
-      throw error;
-    } finally { clearTimeout(timeout); }
-  };
-  const listFrom = (payload, keys) => {
-    const rows = Array.isArray(payload) ? payload : keys.map((key) => payload?.[key]).find(Array.isArray);
-    if (!rows || rows.some((row) => !row || typeof row !== 'object' || Array.isArray(row))) throw new Error('The evaluation service returned an invalid list.');
-    return rows;
-  };
-  const evaluationFrom = (payload) => {
-    const item = payload?.evaluation || payload?.data || payload;
-    if (!item || typeof item !== 'object' || Array.isArray(item) || (!item.status && !item.state)) throw new Error('The evaluation service returned an invalid evaluation.');
+  const unwrap = payload => {
+    const item = payload?.evaluation ?? payload;
+    if (!item || typeof item !== 'object' || !idOf(item)) throw new api.ApiError('The service did not return an evaluation reference. Check your records before retrying.');
+    if (!['QUEUED', 'RUNNING', 'COMPLETED', 'INVALID', 'FAILED', 'CANCELLED'].includes(api.status(item))) throw new api.ApiError('The service returned an unknown evaluation status.');
     return item;
   };
-  const boardPath = (config) => `/leaderboards/${encodeURIComponent(config.board)}`;
-  const rankingState = (state, message) => {
-    $('.leaderboard-connection')?.setAttribute('data-state', state);
-    setMessage($('#leaderboard-status'), message);
+  const resultText = item => {
+    const count = item.completed_episodes ?? item.progress?.completed_episodes;
+    const progress = Number.isInteger(count) && count >= 0 && count <= 720 ? ` · ${count}/720 episodes` : '';
+    return `${api.status(item)}${progress}${api.score(item) !== '—' ? ` · Protocol score: ${api.score(item)}` : ''}`;
   };
-  const loadRankings = async () => {
-    if (!rankingBody || document.hidden) return;
-    const controller = begin('rankings');
+  const updateDetail = item => {
+    message($('#record-detail-state'), resultText(item), ['INVALID', 'FAILED', 'CANCELLED'].includes(api.status(item)));
+    const expiry = api.date(item.videos_expires_at);
+    message($('#record-media-expiry'), expiry ? `${expiry <= new Date() ? 'Videos expired' : 'Videos expire'}: ${expiry.toLocaleString()}. Scores remain available.` : 'Videos remain private and expire seven days after the evaluation reaches a terminal state.');
+    $('#cancel-evaluation').hidden = api.terminal(item);
+    document.dispatchEvent(new CustomEvent('evaluation-details-update', { detail: item }));
+  };
+  const renderRecords = () => {
+    $('#evaluation-records-body').innerHTML = records.length ? records.map(item => `<tr>
+      <td><button type="button" class="evaluation-record-link" data-evaluation-id="${escape(idOf(item))}">${escape(item.team_display_name)}</button></td>
+      <td>${escape(item.model_id)}<small class="record-version">${escape(item.model_version)}</small></td><td>${escape(item.profile_id)}</td>
+      <td>${escape(category(item.website_metadata?.submission_type))}</td><td>${escape(item.website_metadata?.organization)}</td>
+      <td>${badge(item)}</td><td>${escape(api.score(item))}</td></tr>`).join('') : `<tr class="leaderboard-empty"><td colspan="7"><strong>No matching records on the pages searched.</strong><small>${nextCursor !== null ? 'Search the next page to continue.' : 'Check the team name and the account you are signed in to.'}</small></td></tr>`;
+    $('#records-count').textContent = `${records.length} matching ${records.length === 1 ? 'record' : 'records'}`;
+  };
+  const poll = async (id, target) => {
+    active.set(target, id);
+    const controller = begin(target);
+    if (document.hidden) { timers.set(target, setTimeout(() => poll(id, target), 5000)); return; }
     try {
-      const config = getConfig();
-      rankingState('loading', 'Updating rankings');
-      const rows = listFrom(await request(`${boardPath(config)}/rankings`, config, controller), ['rankings', 'entries', 'data']);
-      if (controller.signal.aborted) return;
-      $('#leaderboard-count').textContent = `${rows.length} ${rows.length === 1 ? 'entry' : 'entries'}`;
-      rankingBody.innerHTML = rows.length ? rows.map((row, index) => {
-        const name = policyName(row);
-        const category = typeLabel(row.submission_type || row.type || row.category);
-        return `<tr><td><span class="rank-value">${escapeText(row.rank ?? index + 1)}</span></td><td><div class="model-cell"><span class="model-name"><strong>${escapeText(name)}</strong></span></div></td><td>${escapeText(row.team_name || '—')}</td><td>${escapeText(row.organization || '—')}</td><td><span class="entry-category">${escapeText(category)}</span></td><td><span class="score-value">${escapeText(row.score ?? row.value)}</span></td></tr>`;
-      }).join('') : '<tr class="leaderboard-empty"><td colspan="6"><span>NO RESULTS YET</span><strong>Be the first on the leaderboard.</strong><small>Completed evaluations will appear here.</small></td></tr>';
-      rankingState('connected', isDemoApi(config.base) ? 'Demo rankings · sample data' : 'Live rankings');
+      const item = unwrap(await api.request(`/evaluations/${encodeURIComponent(id)}`, { signal: controller.signal }));
+      if (controller.signal.aborted || active.get(target) !== id) return;
+      if (target === 'detail') {
+        if (selected !== id) return;
+        updateDetail(item); records = records.map(record => idOf(record) === id ? { ...record, ...item } : record); renderRecords();
+      } else {
+        $('#submission-status').innerHTML = badge(item);
+        message($('#evaluation-state'), resultText(item), ['INVALID', 'FAILED', 'CANCELLED'].includes(api.status(item)));
+      }
+      if (api.terminal(item)) active.delete(target);
+      else timers.set(target, setTimeout(() => poll(id, target), 5000));
     } catch (error) {
-      if (error.name !== 'AbortError') rankingState('error', error.message);
-    } finally {
-      if (controllers.get('rankings') === controller && !document.hidden) timers.set('rankings', setTimeout(loadRankings, 8000));
+      if (error.name === 'AbortError') return;
+      message($(target === 'detail' ? '#record-detail-state' : '#evaluation-state'), error.message, true);
+      if ([401, 403, 404].includes(error.status)) {
+        active.delete(target);
+        if (target === 'detail') { clearDetail(); message($('#records-state'), error.message, true); }
+      }
+      else if (active.get(target) === id) timers.set(target, setTimeout(() => poll(id, target), 8000));
     }
   };
-
-  const showTab = (name, { focus = false, updateHash = true } = {}) => {
-    const tabName = name === 'records' ? 'records' : 'submission';
-    if (tabName !== 'records') document.dispatchEvent(new Event('evaluation-details-conceal'));
-    document.querySelectorAll('[data-evaluation-tab]').forEach((tab) => {
-      const active = tab.dataset.evaluationTab === tabName;
-      tab.setAttribute('aria-selected', String(active));
-      tab.tabIndex = active ? 0 : -1;
-      tab.classList.toggle('is-active', active);
-      if (active && focus) tab.focus();
+  const showTab = (name, focus = false, updateHash = true) => {
+    const current = name === 'records' ? 'records' : 'submission';
+    document.querySelectorAll('[data-evaluation-tab]').forEach(tab => {
+      const chosen = tab.dataset.evaluationTab === current;
+      tab.setAttribute('aria-selected', String(chosen)); tab.tabIndex = chosen ? 0 : -1;
+      if (chosen && focus) tab.focus();
     });
-    for (const name of ['submission', 'records']) {
-      if ($(`#${name}-panel`)) $(`#${name}-panel`).hidden = name !== tabName;
-    }
-    if (updateHash) history.replaceState(null, '', `${location.pathname}${location.search}${tabName === 'records' ? '#records' : '#submission'}`);
+    if (!form) return;
+    $('#submission-panel').hidden = current !== 'submission'; $('#records-panel').hidden = current !== 'records';
+    if (current !== 'records') clearDetail();
+    if (updateHash) history.replaceState(null, '', `${location.pathname}${location.search}#${current}`);
   };
-  document.querySelectorAll('[data-evaluation-tab]').forEach((tab) => {
+  document.querySelectorAll('[data-evaluation-tab]').forEach(tab => {
     tab.addEventListener('click', () => showTab(tab.dataset.evaluationTab));
-    tab.addEventListener('keydown', (event) => {
+    tab.addEventListener('keydown', event => {
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
       event.preventDefault();
-      const name = event.key === 'Home' ? 'submission' : event.key === 'End' ? 'records' : tab.dataset.evaluationTab === 'submission' ? 'records' : 'submission';
-      showTab(name, { focus: true });
+      showTab(event.key === 'Home' ? 'submission' : event.key === 'End' ? 'records' : tab.dataset.evaluationTab === 'records' ? 'submission' : 'records', true);
     });
   });
-  if (form) showTab(location.hash === '#records' ? 'records' : 'submission', { updateHash: false });
-  window.addEventListener('hashchange', () => { if (form) showTab(location.hash === '#records' ? 'records' : 'submission', { updateHash: false }); });
-
-  const pollEvaluation = async (id, config, target) => {
-    const channel = `evaluation-${target}`;
-    const controller = begin(channel);
-    activeEvaluations.set(target, { id, config });
-    if (document.hidden) { timers.set(channel, setTimeout(() => pollEvaluation(id, config, target), 5000)); return; }
-    const message = target === 'submission' ? $('#evaluation-state') : $('#record-detail-state');
+  if (form) {
+    showTab(location.hash === '#records' ? 'records' : 'submission', false, false);
+    window.addEventListener('hashchange', () => showTab(location.hash === '#records' ? 'records' : 'submission', false, false));
+  }
+  const loadProfiles = async () => {
+    if (!form) return;
+    const controller = begin('profiles');
     try {
-      const result = evaluationFrom(await request(`/evaluations/${encodeURIComponent(id)}`, config, controller));
+      const list = api.rows(await api.request('/profiles', { signal: controller.signal }), 'profiles');
       if (controller.signal.aborted) return;
-      const state = statusOf(result);
-      if (target === 'submission') $('#submission-status').innerHTML = badge(state);
-      setMessage(message, succeeded(state) ? 'Evaluation completed. Results are available on the leaderboard.' : failed(state) ? `Evaluation ${state}.` : `Evaluation status: ${state}.`, failed(state) ? 'error' : '');
-      if (target === 'records') {
-        records = records.map((record) => String(record.evaluation_id || record.id) === id ? { ...record, ...result } : record);
-        renderRecords();
+      const select = $('#evaluation-profile');
+      select.replaceChildren(new Option('Choose a published profile', '')); profiles.clear();
+      for (const item of list) {
+        const id = item.profile_id ?? item.id;
+        if (typeof id !== 'string' || !id) throw new api.ApiError('The service returned an invalid profile.');
+        if (profiles.has(id)) continue;
+        profiles.add(id); select.add(new Option(id, id));
       }
-      if (!terminal(state)) timers.set(channel, setTimeout(() => pollEvaluation(id, config, target), 5000));
-      else activeEvaluations.delete(target);
-    } catch (error) {
-      if (error.name !== 'AbortError') {
-        activeEvaluations.delete(target);
-        setMessage(message, error.message, 'error');
-      }
-    }
+      if (profiles.size === 1) select.value = [...profiles][0];
+      select.disabled = profiles.size === 0; $('#submit-evaluation').disabled = profiles.size === 0;
+      message($('#evaluation-state'), profiles.size ? 'Complete the required fields to submit your evaluation.' : 'No evaluation profiles are currently published.');
+    } catch (error) { if (error.name !== 'AbortError') message($('#evaluation-state'), error.message, true); }
   };
-
-  form?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    if (submitting) return;
-    const message = $('#evaluation-state');
-    let config;
-    let participantEndpoint;
-    const type = form.querySelector('input[name="submission_type"]:checked')?.value;
-    const profile = getSubmissionProfile();
-    if (!profile) return;
+  const setupContact = () => {
+    const method = $('#contact-method'), input = $('#contact-value');
+    let previous = method.value; const drafts = {};
+    const update = () => {
+      const phone = method.value === 'phone';
+      input.type = phone ? 'tel' : 'text'; input.inputMode = phone ? 'tel' : 'text'; input.autocomplete = phone ? 'tel' : 'off';
+      input.maxLength = phone ? 40 : 64; input.placeholder = phone ? '+86 138 0000 0000' : 'Your WeChat ID';
+      $('#contact-value-label').textContent = phone ? 'Phone number' : 'WeChat ID';
+      $('#contact-value-hint').textContent = phone ? 'Include the country code for international numbers.' : 'Enter your WeChat ID without spaces.';
+      input.setCustomValidity('');
+    };
+    method.addEventListener('change', () => { drafts[previous] = input.value; input.value = drafts[method.value] || ''; previous = method.value; update(); });
+    update();
+  };
+  if (form) {
+    setupContact();
+    if (api.demo) {
+      const values = { team_display_name: 'Demo team', model_id: 'sample-policy', model_version: 'v1', model_endpoint: 'https://model.example/evaluate', model_api_key: 'demo-key-not-a-secret', organization: 'Demo lab', email: 'demo@example.com', submission_type: 'agent', contact_value: '+8613800000000' };
+      for (const [name, value] of Object.entries(values)) form.elements.namedItem(name).value = value;
+      teamSearch.value = 'Demo team'; message($('#service-state'), 'Demo mode · illustrative sample data only. No real model is contacted.');
+    } else if (!api.configured) message($('#service-state'), 'Online evaluation is not available yet.');
+    form.addEventListener('input', event => event.target.setCustomValidity?.(''));
+    form.addEventListener('submit', async event => {
+      event.preventDefault(); if (submitting) return;
+      const value = name => form.elements.namedItem(name).value.trim();
+      for (const input of form.querySelectorAll('input[required]')) if (!input.value.trim()) input.setCustomValidity('Complete this required field.');
+      const contact = value('contact_value');
+      if (value('contact_method') === 'phone' ? !/^\+?\d{7,15}$/.test(contact.replace(/[\s().-]/g, '')) : /\s/.test(contact)) $('#contact-value').setCustomValidity('Enter a valid phone number or WeChat ID.');
+      try {
+        const endpoint = new URL(value('model_endpoint'));
+        if (endpoint.protocol !== 'https:' || (endpoint.port && endpoint.port !== '443') || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) throw new Error();
+      } catch { $('#participant-api-url').setCustomValidity('Use a public HTTPS URL on port 443, without credentials, a query, or a fragment.'); }
+      $('#evaluation-profile').setCustomValidity(profiles.has(value('profile_id')) ? '' : 'Choose a published evaluation profile.');
+      if (!form.reportValidity()) return;
+      const evaluation = Object.fromEntries(['profile_id', 'team_display_name', 'model_id', 'model_version', 'model_endpoint', 'model_api_key'].map(name => [name, value(name)]));
+      const website_metadata = Object.fromEntries(['organization', 'email', 'contact_method', 'contact_value', 'submission_type'].map(name => [name, value(name)]));
+      if (website_metadata.contact_method === 'phone') website_metadata.contact_value = contact.replace(/[\s().-]/g, '');
+      const body = { evaluation, website_metadata }, controller = begin('submit'); submitting = true;
+      const controls = [...form.elements].filter(node => !node.disabled); controls.forEach(node => { node.disabled = true; });
+      message($('#evaluation-state'), 'Submitting your evaluation…');
+      try {
+        const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(body)));
+        const fingerprint = Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('');
+        let attempt = memoryAttempt;
+        try { attempt = JSON.parse(sessionStorage.getItem('react-manip.v1.attempt') || 'null') || attempt; } catch { /* Optional storage. */ }
+        if (attempt?.fingerprint !== fingerprint || typeof attempt?.key !== 'string') attempt = { fingerprint, key: crypto.randomUUID() };
+        memoryAttempt = attempt;
+        try { sessionStorage.setItem('react-manip.v1.attempt', JSON.stringify(attempt)); } catch { /* Keep the in-memory attempt. */ }
+        const item = unwrap(await api.mutate('/evaluations', { body, idempotencyKey: attempt.key, signal: controller.signal }));
+        if (controller.signal.aborted) return;
+        memoryAttempt = null;
+        try { sessionStorage.removeItem('react-manip.v1.attempt'); } catch { /* Optional storage. */ }
+        $('#participant-api-key').value = '';
+        submittedTeam = evaluation.team_display_name; $('#submitted-team-name').textContent = submittedTeam;
+        $('#submission-status').innerHTML = badge(item); $('#submission-result').hidden = false;
+        message($('#evaluation-state'), resultText(item)); active.delete('submission'); stop('submission');
+        if (!api.terminal(item)) { active.set('submission', idOf(item)); timers.set('submission', setTimeout(() => poll(idOf(item), 'submission'), 5000)); }
+      } catch (error) { if (error.name !== 'AbortError') message($('#evaluation-state'), error.message, true); }
+      finally { submitting = false; controls.forEach(node => { node.disabled = false; }); }
+    });
+    loadProfiles();
+  }
+  const loadRecords = async (append = false) => {
+    if (!teamSearch || !teamSearch.value.trim() || !$('#records-form').reportValidity() || (append && nextCursor === null)) return;
+    clearDetail(); const controller = begin('records');
+    if (!append) { records = []; nextCursor = null; searchedTeam = api.normalizeTeam(teamSearch.value); $('#records-load-more').hidden = true; }
+    const after = append ? nextCursor : '0';
+    $('#load-evaluation-records').disabled = true; $('#records-load-more').disabled = true;
+    message($('#records-state'), 'Searching your authorized evaluation records…');
     try {
-      config = getConfig();
-      participantEndpoint = getParticipantEndpoint();
-      if (!['agent', 'model'].includes(type)) throw new Error('Choose whether you are submitting an agent or a model.');
-    } catch (error) { setMessage(message, error.message, 'error'); return; }
-    submitting = true;
-    cancelEvaluation('submission');
-    const controller = begin('submit');
-    const controls = [...form.elements].filter((element) => !element.disabled);
-    controls.forEach((element) => { element.disabled = true; });
-    const button = $('#submit-evaluation');
-    const originalButton = button.innerHTML;
-    button.textContent = 'Submitting…';
-    $('#submission-result').hidden = true;
-    setMessage(message, 'Submitting your evaluation…');
-    try {
-      const submission = { board_id: config.board, submission_type: type, ...profile, participant_endpoint: participantEndpoint };
-      const participantKey = participantKeyInput.value.trim();
-      if (participantKey) submission.participant_api_key = participantKey;
-      const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(submission)));
-      const fingerprint = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
-      if (submissionAttempt?.fingerprint !== fingerprint) submissionAttempt = { fingerprint, key: crypto.randomUUID() };
-      const result = evaluationFrom(await request('/evaluations', config, controller, submission, submissionAttempt.key));
+      // The evaluator supports owner-scoped pagination, not a team_name query parameter.
+      const payload = await api.request(`/evaluations?after=${encodeURIComponent(after)}&limit=50`, { signal: controller.signal });
       if (controller.signal.aborted) return;
-      const id = result.evaluation_id || result.id;
-      if (typeof id !== 'string' || !id.trim()) throw new Error('The evaluation service did not return a tracking reference. Check Evaluation records before trying again.');
-      remember(config);
-      submittedConfig = config;
-      submittedId = id;
-      submissionAttempt = undefined;
-      participantKeyInput.value = '';
-      const state = statusOf(result);
-      $('#submitted-policy-name').textContent = profile.policy_name;
-      $('#submission-status').innerHTML = badge(state);
-      $('#submission-result').hidden = false;
-      setMessage(message, succeeded(state) ? 'Evaluation completed. Results are available on the leaderboard.' : failed(state) ? `Evaluation ${state}. Check the evaluation service for details.` : 'Evaluation submitted. Its status will update automatically.', failed(state) ? 'error' : 'success');
-      if (!terminal(state)) {
-        activeEvaluations.set('submission', { id: submittedId, config });
-        timers.set('evaluation-submission', setTimeout(() => pollEvaluation(submittedId, config, 'submission'), 5000));
+      const list = api.rows(payload, 'evaluations'); nextCursor = api.cursor(payload);
+      if (nextCursor === after) throw new api.ApiError('The service returned a pagination cursor that did not advance.');
+      const seen = new Set(records.map(idOf));
+      for (const item of list) {
+        if (api.normalizeTeam(item.team_display_name) !== searchedTeam || seen.has(idOf(item))) continue;
+        records.push(unwrap(item)); seen.add(idOf(item));
       }
-    } catch (error) {
-      setMessage(message, error.name === 'AbortError' ? 'Submission status could not be confirmed. Check Evaluation records before submitting again.' : error.message, 'error');
-    } finally {
-      submitting = false;
-      controls.forEach((element) => { element.disabled = false; });
-      button.innerHTML = originalButton;
-    }
-  });
-
-  const renderRecords = () => {
-    const body = $('#evaluation-records-body');
-    if (!body) return;
-    body.innerHTML = records.length ? records.map((record) => {
-      const id = record.evaluation_id || record.id;
-      const name = escapeText(policyName(record));
-      return `<tr><td>${id ? `<button class="evaluation-record-link" type="button" data-evaluation-id="${escapeText(id)}">${name}</button>` : name}</td><td>${escapeText(record.team_name || '—')}</td><td>${escapeText(record.organization || '—')}</td><td>${escapeText(typeLabel(record.submission_type || record.type))}</td><td>${badge(statusOf(record))}</td><td>${escapeText(record.score)}</td></tr>`;
-    }).join('') : '<tr class="leaderboard-empty"><td colspan="6"><span>NO EVALUATIONS</span><strong>No matching evaluations.</strong><small>Try another policy name or submit a policy.</small></td></tr>';
-    $('#records-count').textContent = `${records.length} ${records.length === 1 ? 'record' : 'records'}`;
-    $('#records-load-more').hidden = !nextCursor;
+      renderRecords(); $('#records-load-more').hidden = nextCursor === null;
+      message($('#records-state'), `Records for ${teamSearch.value.trim()}.${nextCursor !== null ? ' More pages are available; search the next page to continue.' : ' All available pages have been searched.'}`);
+    } catch (error) { if (error.name !== 'AbortError') message($('#records-state'), error.message, true); }
+    finally { if (controllers.get('records') === controller) { $('#load-evaluation-records').disabled = false; $('#records-load-more').disabled = false; } }
   };
-  const loadRecords = async (append = false, suppliedConfig) => {
-    document.dispatchEvent(new Event('evaluation-details-reset'));
-    const controller = begin('records');
-    cancelEvaluation('records');
-    const message = $('#records-state');
-    const button = $('#load-evaluation-records');
-    const more = $('#records-load-more');
-    const body = $('#evaluation-records-body');
-    $('#record-detail').hidden = true;
-    button.disabled = true;
-    more.disabled = true;
-    if (!append) {
-      records = [];
-      nextCursor = null;
-      recordsConfig = undefined;
-      more.hidden = true;
-      $('#records-count').textContent = '— records';
-      body.innerHTML = '<tr class="leaderboard-empty"><td colspan="6"><strong>Looking up evaluations…</strong></td></tr>';
-    }
-    body.closest('table').setAttribute('aria-busy', 'true');
-    try {
-      const config = suppliedConfig || (append ? recordsConfig : getConfig());
-      if (!config) throw new Error('Search for evaluations before loading more records.');
-      const name = append ? recordsPolicy : recordsPolicyInput.value.trim();
-      setMessage(message, name ? `Loading evaluations for ${name}…` : 'Loading evaluations…');
-      const query = new URLSearchParams();
-      if (name) query.set('policy_name', name);
-      if (append && nextCursor) query.set('cursor', nextCursor);
-      const payload = await request(`${boardPath(config)}/evaluations${query.size ? `?${query}` : ''}`, config, controller);
-      const rows = listFrom(payload, ['evaluations', 'records', 'data']);
-      if (controller.signal.aborted) return;
-      recordsConfig = config;
-      recordsPolicy = name;
-      records = append ? [...records, ...rows] : rows;
-      nextCursor = typeof payload?.next_cursor === 'string' && payload.next_cursor ? payload.next_cursor : null;
-      remember(config);
-      renderRecords();
-      setMessage(message, name ? `Evaluation records for ${name}.` : 'Available evaluation records.');
-    } catch (error) {
-      if (error.name !== 'AbortError') {
-        setMessage(message, error.message, 'error');
-        if (!append) body.innerHTML = '<tr class="leaderboard-empty"><td colspan="6"><strong>Could not load evaluation records.</strong><small>Please try again or contact the organizers.</small></td></tr>';
-      }
-    } finally {
-      if (controllers.get('records') === controller) {
-        button.disabled = false;
-        more.disabled = false;
-        body.closest('table').removeAttribute('aria-busy');
-      }
-    }
-  };
-  $('#records-form')?.addEventListener('submit', (event) => { event.preventDefault(); loadRecords(); });
+  $('#records-form')?.addEventListener('submit', event => { event.preventDefault(); loadRecords(); });
   $('#records-load-more')?.addEventListener('click', () => loadRecords(true));
-  $('#view-evaluation-records')?.addEventListener('click', () => {
-    if (!submittedConfig) return;
-    recordsPolicyInput.value = $('#submitted-policy-name').textContent;
-    showTab('records', { focus: true });
-    loadRecords(false, submittedConfig);
+  teamSearch?.addEventListener('input', () => {
+    stop('records'); clearDetail(); records = []; nextCursor = null;
+    $('#records-load-more').hidden = true; $('#load-evaluation-records').disabled = false;
+    $('#evaluation-records-body').innerHTML = '<tr class="leaderboard-empty"><td colspan="7"><strong>Search by team name to view your records.</strong></td></tr>';
+    $('#records-count').textContent = '— records'; message($('#records-state'), 'Enter a team name to search your records.');
   });
-  $('#evaluation-records-body')?.addEventListener('click', (event) => {
-    const trigger = event.target.closest('[data-evaluation-id]');
-    if (!trigger || !recordsConfig) return;
-    const id = trigger.dataset.evaluationId;
-    document.dispatchEvent(new CustomEvent('evaluation-details-select', { detail: { id, config: { ...recordsConfig } } }));
-    $('#record-detail').hidden = false;
-    $('#record-detail-title').textContent = trigger.textContent;
-    $('#record-detail').focus();
-    setMessage($('#record-detail-state'), 'Checking evaluation status…');
-    pollEvaluation(id, recordsConfig, 'records');
+  $('#view-evaluation-records')?.addEventListener('click', () => { teamSearch.value = submittedTeam; showTab('records', true); loadRecords(); });
+  $('#evaluation-records-body')?.addEventListener('click', event => {
+    const button = event.target.closest('[data-evaluation-id]'); if (!button) return;
+    clearDetail(); selected = button.dataset.evaluationId;
+    const item = records.find(row => idOf(row) === selected); if (!item) return;
+    $('#record-detail').hidden = false; $('#record-detail-title').textContent = `${item.team_display_name} · ${item.model_id} · ${item.model_version}`;
+    $('#record-detail').focus(); updateDetail(item);
+    document.dispatchEvent(new CustomEvent('evaluation-details-select', { detail: { id: selected, evaluation: item } })); poll(selected, 'detail');
   });
-  if (form && location.hash === '#records') window.setTimeout(() => loadRecords(), 0);
-  $('#records-tab')?.addEventListener('click', () => { if (!recordsConfig) loadRecords(); });
-  recordsPolicyInput?.addEventListener('input', () => {
-    document.dispatchEvent(new Event('evaluation-details-reset'));
-    stop('records');
-    cancelEvaluation('records');
-    recordsConfig = undefined;
-    records = [];
-    nextCursor = null;
-    $('#record-detail').hidden = true;
-    $('#records-load-more').hidden = true;
-    $('#load-evaluation-records').disabled = false;
-    $('#evaluation-records-body').closest('table').removeAttribute('aria-busy');
-    $('#evaluation-records-body').innerHTML = '<tr class="leaderboard-empty"><td colspan="6"><strong>Search to view evaluation records.</strong></td></tr>';
-    $('#records-count').textContent = '— records';
-    setMessage($('#records-state'), 'Search by policy name, or leave blank to view all available evaluations.');
+  $('#cancel-evaluation')?.addEventListener('click', async () => {
+    if (!selected) return;
+    const id = selected, controller = begin('cancel'); $('#cancel-evaluation').disabled = true;
+    try { await api.mutate(`/evaluations/${encodeURIComponent(id)}/cancel`, { signal: controller.signal }); if (selected === id && !controller.signal.aborted) await poll(id, 'detail'); }
+    catch (error) { if (error.name !== 'AbortError') message($('#record-detail-state'), error.message, true); }
+    finally { $('#cancel-evaluation').disabled = false; }
   });
-  const pause = () => {
-    for (const channel of controllers.keys()) stop(channel);
-    for (const timer of timers.values()) clearTimeout(timer);
-  };
-  window.addEventListener('pagehide', pause);
-  window.addEventListener('pageshow', () => {
-    if (rankingBody) {
-      try { saved = JSON.parse(sessionStorage.getItem(storageKey) || '{}') || {}; } catch { /* Retain in-memory settings. */ }
-      $('#leaderboard-submit-link').href = submitUrl();
-      loadRankings();
+  const loadRankings = async () => {
+    if (!$('#leaderboard-body') || document.hidden) return;
+    const controller = begin('rankings'), chosen = $('#ranking-profile').value;
+    try {
+      const payload = await api.request(`/rankings${chosen ? `?profile_id=${encodeURIComponent(chosen)}` : ''}`, { signal: controller.signal });
+      if (controller.signal.aborted) return;
+      const options = api.rows(payload, 'profiles'), profile = payload.profile_id;
+      if (chosen && profile !== chosen) throw new api.ApiError('Results do not match the selected profile.');
+      const rows = api.rows(payload, 'rankings');
+      if (rows.length && (!profile || rows.some(row => row.profile_id !== profile || api.status(row) !== 'COMPLETED' || row.score_kind !== 'protocol' || row.eligible_for_ranking !== true || typeof row.score !== 'number' || !Number.isFinite(row.score)))) throw new api.ApiError('The service returned incompatible ranking results.');
+      const select = $('#ranking-profile'); select.replaceChildren(new Option('Select an evaluation profile', ''));
+      for (const option of options) if (typeof option.profile_id === 'string') select.add(new Option(option.profile_id, option.profile_id));
+      if (profile) { if (![...select.options].some(option => option.value === profile)) throw new api.ApiError('The ranking profile is missing from the published list.'); select.value = profile; }
+      select.disabled = options.length === 0;
+      $('#leaderboard-body').innerHTML = rows.length ? rows.map((row, index) => `<tr><td><span class="rank-value">${index + 1}</span></td><td>${escape(row.team_display_name)}</td><td>${escape(row.model_id)}<small class="record-version">${escape(row.model_version)}</small></td><td>${escape(category(row.website_metadata?.submission_type))}</td><td class="score-value">${escape(api.score(row))}</td></tr>`).join('') : '<tr class="leaderboard-empty"><td colspan="5"><strong>No protocol results are available for this profile yet.</strong></td></tr>';
+      $('#leaderboard-count').textContent = `${rows.length} entries`;
+      message($('#leaderboard-status'), api.demo ? 'Demo rankings · illustrative sample data' : 'Protocol trial rankings'); $('.leaderboard-connection').dataset.state = 'connected';
+      timers.set('rankings', setTimeout(loadRankings, 15000));
+    } catch (error) {
+      if (error.name === 'AbortError') return;
+      $('#leaderboard-body').innerHTML = '<tr class="leaderboard-empty"><td colspan="5"><strong>Rankings are not available yet.</strong></td></tr>'; $('#leaderboard-count').textContent = '— entries';
+      message($('#leaderboard-status'), error.message, true); $('.leaderboard-connection').dataset.state = 'error';
+      if (api.configured) timers.set('rankings', setTimeout(loadRankings, 15000));
     }
-    for (const [target, { id, config }] of activeEvaluations) pollEvaluation(id, config, target);
-    if (form && $('#load-evaluation-records').disabled) loadRecords();
-  });
-  document.addEventListener('visibilitychange', () => {
-    if (rankingBody) { if (document.hidden) stop('rankings'); else loadRankings(); }
-  });
+  };
+  $('#ranking-profile')?.addEventListener('change', loadRankings);
+  if ($('#leaderboard-submit-link') && api.demo) $('#leaderboard-submit-link').href = 'submit.html?demo=1';
+  if (form && api.demo && location.hash === '#records') loadRecords();
+  loadRankings();
+  const pause = () => { for (const key of controllers.keys()) stop(key); for (const timer of timers.values()) clearTimeout(timer); };
+  window.addEventListener('pagehide', pause);
+  window.addEventListener('pageshow', event => { if (event.persisted) { loadRankings(); if (form) loadProfiles(); for (const [target, id] of active) poll(id, target); } });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stop('rankings'); else { loadRankings(); for (const [target, id] of active) poll(id, target); } });
 })();
