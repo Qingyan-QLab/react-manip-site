@@ -110,7 +110,7 @@
   };
   const getConfig = () => {
     const base = demoMode ? demoApi : fixedApi;
-    if (!base) throw new Error('Online evaluation is not available yet. Please try the demo or contact the organizers.');
+    if (!base) throw new Error('Online evaluation is not available yet.');
     let url;
     try { url = new URL(base); } catch { throw new Error('The evaluation service is not configured correctly. Please contact the organizers.'); }
     if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
