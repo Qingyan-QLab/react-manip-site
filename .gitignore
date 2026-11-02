@@ -37,3 +37,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Website runtime data and private credentials (never publish with the static site)
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+website/data/
+website/secrets/
+*.pem
+*.key
