@@ -247,17 +247,17 @@
     if (!$('#leaderboard-body') || document.hidden) return;
     const controller = begin('rankings'), chosen = $('#ranking-profile').value;
     try {
-      const payload = await api.request(`/rankings${chosen ? `?profile_id=${encodeURIComponent(chosen)}` : ''}`, { signal: controller.signal });
+      const payload = await api.rankings(chosen, { signal: controller.signal });
       if (controller.signal.aborted) return;
       const options = api.rows(payload, 'profiles'), profile = payload.profile_id;
       if (chosen && profile !== chosen) throw new api.ApiError('Results do not match the selected profile.');
       const rows = api.rows(payload, 'rankings');
-      if (rows.length && (!profile || rows.some(row => row.profile_id !== profile || api.status(row) !== 'COMPLETED' || row.score_kind !== 'protocol' || row.eligible_for_ranking !== true || typeof row.score !== 'number' || !Number.isFinite(row.score)))) throw new api.ApiError('The service returned incompatible ranking results.');
+      if (rows.length && (!profile || rows.some(row => row.profile_id !== profile || api.status(row) !== 'COMPLETED' || row.completed_episodes !== 720 || row.score_kind !== 'protocol' || row.eligible_for_ranking !== true || typeof row.score !== 'number' || !Number.isFinite(row.score) || row.score < 0 || row.score > 100))) throw new api.ApiError('The service returned incompatible ranking results.');
       const select = $('#ranking-profile'); select.replaceChildren(new Option('Select an evaluation profile', ''));
       for (const option of options) if (typeof option.profile_id === 'string') select.add(new Option(option.profile_id, option.profile_id));
       if (profile) { if (![...select.options].some(option => option.value === profile)) throw new api.ApiError('The ranking profile is missing from the published list.'); select.value = profile; }
       select.disabled = options.length === 0;
-      $('#leaderboard-body').innerHTML = rows.length ? rows.map((row, index) => `<tr><td><span class="rank-value">${index + 1}</span></td><td>${escape(row.team_display_name)}</td><td>${escape(row.model_id)}<small class="record-version">${escape(row.model_version)}</small></td><td>${escape(category(row.website_metadata?.submission_type))}</td><td class="score-value">${escape(api.score(row))}</td></tr>`).join('') : '<tr class="leaderboard-empty"><td colspan="5"><strong>No protocol results are available for this profile yet.</strong></td></tr>';
+      $('#leaderboard-body').innerHTML = rows.length ? rows.map((row, index) => `<tr><td><span class="rank-value">${Number.isSafeInteger(row.rank) && row.rank > 0 ? row.rank : index + 1}</span></td><td>${escape(row.team_display_name)}</td><td>${escape(row.model_id)}<small class="record-version">${escape(row.model_version)}</small></td><td>${escape(category(row.website_metadata?.submission_type))}</td><td class="score-value">${escape(api.score(row))}</td></tr>`).join('') : '<tr class="leaderboard-empty"><td colspan="5"><strong>No protocol results are available for this profile yet.</strong></td></tr>';
       $('#leaderboard-count').textContent = `${rows.length} entries`;
       message($('#leaderboard-status'), api.demo ? 'Demo rankings · illustrative sample data' : 'Protocol trial rankings'); $('.leaderboard-connection').dataset.state = 'connected';
       timers.set('rankings', setTimeout(loadRankings, 15000));
@@ -265,7 +265,7 @@
       if (error.name === 'AbortError') return;
       $('#leaderboard-body').innerHTML = '<tr class="leaderboard-empty"><td colspan="5"><strong>Rankings are not available yet.</strong></td></tr>'; $('#leaderboard-count').textContent = '— entries';
       message($('#leaderboard-status'), error.message, true); $('.leaderboard-connection').dataset.state = 'error';
-      if (api.configured) timers.set('rankings', setTimeout(loadRankings, 15000));
+      if (api.rankingsConfigured) timers.set('rankings', setTimeout(loadRankings, 15000));
     }
   };
   $('#ranking-profile')?.addEventListener('change', loadRankings);

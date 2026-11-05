@@ -4,13 +4,14 @@
   const demo = window.ReactManipDemo;
   const configured = (document.querySelector('meta[name="website-api"]')?.content || '').trim();
   const base = demo?.base || configured.replace(/\/+$/, '');
+  const rankingsBase = base || (document.querySelector('meta[name="website-rankings"]')?.content || '').trim().replace(/\/+$/, '');
   class ApiError extends Error {
     constructor(message, status = 0) { super(message); this.name = 'ApiError'; this.status = status; }
   }
-  const getBase = () => {
-    if (!base) throw new ApiError('Online evaluation is not available yet.');
+  const getBase = (value = base) => {
+    if (!value) throw new ApiError('Online evaluation is not available yet.');
     let url;
-    try { url = new URL(base); } catch { throw new ApiError('The website service is not configured correctly.'); }
+    try { url = new URL(value); } catch { throw new ApiError('The website service is not configured correctly.'); }
     if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || !['', '/'].includes(url.pathname)) {
       throw new ApiError('The website service requires an HTTPS origin.');
     }
@@ -29,8 +30,7 @@
     429: 'Your request or evaluation quota has been reached. Try again later.',
     503: 'The evaluation service is temporarily unavailable.'
   };
-  const request = async (path, { method = 'GET', body, signal, idempotencyKey, csrfToken, timeout = 20000 } = {}) => {
-    const origin = getBase();
+  const send = async (origin, path, { method = 'GET', body, signal, idempotencyKey, csrfToken, timeout = 20000 } = {}, publicOnly = false) => {
     if (!path.startsWith('/') || path.startsWith('//')) throw new ApiError('Invalid API path.');
     const controller = new AbortController();
     const abort = () => controller.abort();
@@ -44,11 +44,12 @@
     if (csrfToken) headers['X-CSRF-Token'] = csrfToken;
     try {
       const response = await fetch(`${origin}/api/v1${path}`, {
-        method, headers, signal: controller.signal, credentials: 'include', cache: 'no-store', redirect: 'error',
+        method, headers, signal: controller.signal, credentials: publicOnly ? 'omit' : 'include', cache: 'no-store', redirect: 'error',
         ...(body === undefined ? {} : { body: JSON.stringify(body) })
       });
       if (!response.ok) {
-        if (response.status === 401 && path !== '/login') document.dispatchEvent(new Event('react-manip-session-expired'));
+        if (response.status === 401 && path !== '/login' && !publicOnly) document.dispatchEvent(new Event('react-manip-session-expired'));
+        if (publicOnly && response.status === 503) throw new ApiError('Rankings are not available yet.', response.status);
         throw new ApiError(messages[response.status] || `The website service returned an error (${response.status}).`, response.status);
       }
       if (response.status === 204) return null;
@@ -63,6 +64,10 @@
       signal?.removeEventListener('abort', abort);
     }
   };
+  const request = async (path, options) => send(getBase(), path, options);
+  // Public rankings never use a browser session or accept mutation options.
+  const rankings = async (profile, { signal } = {}) => send(getBase(rankingsBase),
+    `/rankings${profile ? `?profile_id=${encodeURIComponent(profile)}` : ''}`, { signal }, true);
   const mutate = async (path, options = {}) => {
     const session = await request('/session', { signal: options.signal });
     if (!session || typeof session.csrf_token !== 'string' || !session.csrf_token) throw new ApiError(messages[401], 401);
@@ -95,5 +100,5 @@
   };
   // Remove the old browser-held bearer configuration during this migration.
   try { sessionStorage.removeItem('react-manip.leaderboard.connection'); } catch { /* Storage is optional. */ }
-  window.ReactManipAPI = Object.freeze({ request, mutate, rows, cursor, normalizeTeam, status, terminal, score, date, mediaUrl, configured: Boolean(base), demo: Boolean(demo), ApiError });
+  window.ReactManipAPI = Object.freeze({ request, mutate, rankings, rows, cursor, normalizeTeam, status, terminal, score, date, mediaUrl, configured: Boolean(base), rankingsConfigured: Boolean(rankingsBase), demo: Boolean(demo), ApiError });
 })();

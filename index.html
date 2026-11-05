@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="ReAct-Manip benchmarks learning by doing in robot manipulation through 10 practice Episodes and 5 evaluation Episodes per Task Instance." />
     <meta name="website-api" content="" />
+    <meta name="website-rankings" content="https://8.130.107.114:18443" />
 
     <link rel="preconnect" href="https://quotient-lab.github.io" crossorigin />
     <link rel="dns-prefetch" href="//quotient-lab.github.io" />
@@ -217,7 +218,7 @@
             <div><span class="section-number">04</span><h2>Leaderboard</h2></div>
             <a class="button primary" id="leaderboard-submit-link" href="https://8.130.107.114:18443/submit.html">Evaluation portal <span aria-hidden="true">↗</span></a>
           </div>
-          <p class="leaderboard-note">Protocol trial scores only. Results from different evaluation profiles are kept separate; official scores are not available.</p>
+          <p class="leaderboard-note">Highest verified score per team within each evaluation profile. Scores are ordered from high to low; ties go to the earlier completed evaluation. Updates every 15 seconds. Protocol trial scores only.</p>
           <label class="evaluation-field ranking-profile-field" for="ranking-profile"><span>Evaluation profile</span><select id="ranking-profile" disabled><option value="">No profiles loaded</option></select></label>
           <div class="leaderboard-toolbar"><div class="leaderboard-connection" data-state="idle"><i aria-hidden="true"></i><span id="leaderboard-status" role="status">Awaiting results</span></div><span id="leaderboard-count">— entries</span></div>
           <div class="leaderboard-table-wrap" tabindex="0" role="region" aria-label="Leaderboard rankings"><table class="live-leaderboard"><thead><tr><th scope="col">Rank</th><th scope="col">Team name</th><th scope="col">Model</th><th scope="col">Category</th><th scope="col">Protocol score</th></tr></thead><tbody id="leaderboard-body"><tr class="leaderboard-empty"><td colspan="5"><span>REACT-MANIP</span><strong>Rankings are not available yet.</strong><small>Completed evaluations will appear here.</small></td></tr></tbody></table></div>
@@ -261,9 +262,9 @@
     </footer>
     <script src="tasks.js?v=20261030-demo" defer></script>
     <script src="script.js?v=20261030-demo" defer></script>
-    <script src="demo-api.js?v=20261102-v1" defer></script>
-    <script src="evaluation-api.js?v=20261104" defer></script>
-    <script src="leaderboard.js?v=20261104" defer></script>
+    <script src="demo-api.js?v=20261105-rankings" defer></script>
+    <script src="evaluation-api.js?v=20261105-rankings" defer></script>
+    <script src="leaderboard.js?v=20261105-rankings" defer></script>
   </body>
 </html>
 

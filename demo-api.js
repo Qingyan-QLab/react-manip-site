@@ -37,12 +37,17 @@
     if (path === '/api/v1/profiles' && method === 'GET') return json({ profiles: [{ profile_id: profile }] });
     if (path === '/api/v1/rankings' && method === 'GET') {
       if (url.searchParams.get('profile_id') && url.searchParams.get('profile_id') !== profile) return json({ error: 'Profile not found' }, 404);
-      const latest = new Map();
-      for (const item of records) if (item.status === 'COMPLETED' && item.eligible_for_ranking && !latest.has(item.team_display_name)) latest.set(item.team_display_name, item);
-      const rankings = [...latest.values()].sort((a, b) => b.score - a.score).map(item => ({ evaluation_id: item.evaluation_id, profile_id: profile,
+      const ordered = records.filter(item => item.profile_id === profile && item.status === 'COMPLETED' && item.completed_episodes === 720 && item.eligible_for_ranking && Number.isFinite(item.score))
+        .sort((a, b) => b.score - a.score || a.finished_at - b.finished_at || a.evaluation_id.localeCompare(b.evaluation_id));
+      const best = new Map();
+      for (const item of ordered) {
+        const team = item.team_display_name.normalize('NFKC').trim().replace(/\s+/gu, ' ').toLowerCase();
+        if (!best.has(team)) best.set(team, item);
+      }
+      const rankings = [...best.values()].map((item, index) => ({ rank: index + 1, profile_id: profile,
         team_display_name: item.team_display_name, model_id: item.model_id, model_version: item.model_version, status: item.status,
-        score: item.score, score_kind: 'protocol', official_score: null, eligible_for_ranking: true, website_metadata: { submission_type: item.website_metadata.submission_type } }));
-      return json({ profiles: [{ profile_id: profile }], profile_id: profile, rankings });
+        completed_episodes: 720, score: item.score, score_kind: 'protocol', official_score: null, eligible_for_ranking: true, website_metadata: { submission_type: item.website_metadata.submission_type } }));
+      return json({ profiles: [{ profile_id: profile }], profile_id: profile, policy: 'best_per_team', rankings });
     }
     if (path === '/api/v1/evaluations' && method === 'GET') {
       const after = Number(url.searchParams.get('after') || 0), limit = Math.min(50, Number(url.searchParams.get('limit') || 50));
