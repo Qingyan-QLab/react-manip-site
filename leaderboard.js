@@ -4,12 +4,16 @@
   const api = window.ReactManipAPI, $ = selector => document.querySelector(selector);
   const form = $('#submission-form'), teamSearch = $('#records-team-name');
   const controllers = new Map(), timers = new Map(), active = new Map(), profiles = new Set();
-  let records = [], nextCursor = null, searchedTeam = '', selected = null, submittedTeam = '', submitting = false, memoryAttempt;
+  let records = [], nextCursor = null, searchedTeam = '', selected = null, submittedTeam = '', submitting = false, memoryAttempt, sessionGeneration = 0;
   const escape = value => String(value ?? '—').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
   const category = value => ({ agent: 'Agent', model: 'Model' }[value] || '—');
   const message = (node, text, error = false) => { if (node) { node.textContent = text; node.dataset.state = error ? 'error' : ''; } };
-  const badge = item => `<span class="evaluation-status" data-status="${escape(api.status(item).toLowerCase())}">${escape(api.status(item) || 'UNKNOWN')}</span>`;
-  const idOf = item => String(item?.evaluation_id || item?.id || '');
+  const awaitingRelay = item => ['PREPARED', 'UNCERTAIN'].includes(item.relay_state);
+  const relayNeedsAttention = item => awaitingRelay(item) && item.relay_can_retry === false;
+  const hasProblem = item => relayNeedsAttention(item) || ['INVALID', 'FAILED', 'CANCELLED'].includes(api.status(item));
+  const badge = item => `<span class="evaluation-status" data-status="${escape(api.status(item).toLowerCase())}">${escape(relayNeedsAttention(item) ? 'CONFIRMATION NEEDED' : awaitingRelay(item) ? 'AWAITING CONFIRMATION' : api.status(item) || 'UNKNOWN')}</span>`;
+  // Keep the website reference stable while a queued relay acquires its evaluator ID.
+  const idOf = item => String(item?.submission_id || item?.evaluation_id || item?.id || '');
   const stop = name => { clearTimeout(timers.get(name)); controllers.get(name)?.abort(); controllers.delete(name); };
   const begin = name => { stop(name); const controller = new AbortController(); controllers.set(name, controller); return controller; };
   const clearDetail = () => {
@@ -24,15 +28,18 @@
     return item;
   };
   const resultText = item => {
-    const count = item.completed_episodes ?? item.progress?.completed_episodes;
+    if (item.relay_state === 'REJECTED') return 'The evaluator rejected this submission. Review the submission settings before trying again.';
+    if (relayNeedsAttention(item)) return 'Forwarding could not be confirmed. Contact the organizer before starting a new submission.';
+    if (awaitingRelay(item)) return 'Submission saved. Waiting for the evaluator to confirm receipt; you can check your records for updates.';
+    const count = item.completed_episodes ?? item.episodes_completed ?? item.progress?.completed_episodes;
     const progress = Number.isInteger(count) && count >= 0 && count <= 720 ? ` · ${count}/720 episodes` : '';
     return `${api.status(item)}${progress}${api.score(item) !== '—' ? ` · Protocol score: ${api.score(item)}` : ''}`;
   };
   const updateDetail = item => {
-    message($('#record-detail-state'), resultText(item), ['INVALID', 'FAILED', 'CANCELLED'].includes(api.status(item)));
+    message($('#record-detail-state'), resultText(item), hasProblem(item));
     const expiry = api.date(item.videos_expires_at);
     message($('#record-media-expiry'), expiry ? `${expiry <= new Date() ? 'Videos expired' : 'Videos expire'}: ${expiry.toLocaleString()}. Scores remain available.` : 'Videos remain private and expire seven days after the evaluation reaches a terminal state.');
-    $('#cancel-evaluation').hidden = api.terminal(item);
+    $('#cancel-evaluation').hidden = api.terminal(item) || awaitingRelay(item);
     document.dispatchEvent(new CustomEvent('evaluation-details-update', { detail: item }));
   };
   const renderRecords = () => {
@@ -55,9 +62,10 @@
         updateDetail(item); records = records.map(record => idOf(record) === id ? { ...record, ...item } : record); renderRecords();
       } else {
         $('#submission-status').innerHTML = badge(item);
-        message($('#evaluation-state'), resultText(item), ['INVALID', 'FAILED', 'CANCELLED'].includes(api.status(item)));
+        $('#submission-result-label').textContent = awaitingRelay(item) ? 'Submission saved' : 'Evaluation submitted';
+        message($('#evaluation-state'), resultText(item), hasProblem(item));
       }
-      if (api.terminal(item)) active.delete(target);
+      if (api.terminal(item) || relayNeedsAttention(item)) active.delete(target);
       else timers.set(target, setTimeout(() => poll(id, target), 5000));
     } catch (error) {
       if (error.name === 'AbortError') return;
@@ -149,7 +157,7 @@
       const evaluation = Object.fromEntries(['profile_id', 'team_display_name', 'model_id', 'model_version', 'model_endpoint', 'model_api_key'].map(name => [name, value(name)]));
       const website_metadata = Object.fromEntries(['organization', 'email', 'contact_method', 'contact_value', 'submission_type'].map(name => [name, value(name)]));
       if (website_metadata.contact_method === 'phone') website_metadata.contact_value = contact.replace(/[\s().-]/g, '');
-      const body = { evaluation, website_metadata }, controller = begin('submit'); submitting = true;
+      const body = { evaluation, website_metadata }, controller = begin('submit'), generation = sessionGeneration; submitting = true;
       const controls = [...form.elements].filter(node => !node.disabled); controls.forEach(node => { node.disabled = true; });
       message($('#evaluation-state'), 'Submitting your evaluation…');
       try {
@@ -161,14 +169,15 @@
         memoryAttempt = attempt;
         try { sessionStorage.setItem('react-manip.v1.attempt', JSON.stringify(attempt)); } catch { /* Keep the in-memory attempt. */ }
         const item = unwrap(await api.mutate('/evaluations', { body, idempotencyKey: attempt.key, signal: controller.signal }));
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted || generation !== sessionGeneration) return;
         memoryAttempt = null;
         try { sessionStorage.removeItem('react-manip.v1.attempt'); } catch { /* Optional storage. */ }
         $('#participant-api-key').value = '';
         submittedTeam = evaluation.team_display_name; $('#submitted-team-name').textContent = submittedTeam;
+        $('#submission-result-label').textContent = awaitingRelay(item) ? 'Submission saved' : 'Evaluation submitted';
         $('#submission-status').innerHTML = badge(item); $('#submission-result').hidden = false;
-        message($('#evaluation-state'), resultText(item)); active.delete('submission'); stop('submission');
-        if (!api.terminal(item)) { active.set('submission', idOf(item)); timers.set('submission', setTimeout(() => poll(idOf(item), 'submission'), 5000)); }
+        message($('#evaluation-state'), resultText(item), hasProblem(item)); active.delete('submission'); stop('submission');
+        if (!api.terminal(item) && !relayNeedsAttention(item)) { active.set('submission', idOf(item)); timers.set('submission', setTimeout(() => poll(idOf(item), 'submission'), 5000)); }
       } catch (error) { if (error.name !== 'AbortError') message($('#evaluation-state'), error.message, true); }
       finally { submitting = false; controls.forEach(node => { node.disabled = false; }); }
     });
@@ -185,7 +194,7 @@
       // The evaluator supports owner-scoped pagination, not a team_name query parameter.
       const payload = await api.request(`/evaluations?after=${encodeURIComponent(after)}&limit=50`, { signal: controller.signal });
       if (controller.signal.aborted) return;
-      const list = api.rows(payload, 'evaluations'); nextCursor = api.cursor(payload);
+      const list = api.rows(payload, 'evaluations'); nextCursor = list.length ? api.cursor(payload) : null;
       if (nextCursor === after) throw new api.ApiError('The service returned a pagination cursor that did not advance.');
       const seen = new Set(records.map(idOf));
       for (const item of list) {
@@ -198,6 +207,19 @@
     finally { if (controllers.get('records') === controller) { $('#load-evaluation-records').disabled = false; $('#records-load-more').disabled = false; } }
   };
   $('#records-form')?.addEventListener('submit', event => { event.preventDefault(); loadRecords(); });
+  document.addEventListener('react-manip-session-change', event => {
+    if (!form || event.detail.initial) return;
+    const session = event.detail.session;
+    sessionGeneration++;
+    clearDetail(); stop('records'); stop('submission'); active.delete('submission');
+    records = []; nextCursor = null; memoryAttempt = null; submittedTeam = '';
+    $('#participant-api-key').value = ''; $('#submission-result').hidden = true;
+    $('#records-load-more').hidden = true; $('#records-count').textContent = '— records';
+    $('#evaluation-records-body').innerHTML = '<tr class="leaderboard-empty"><td colspan="7"><strong>Search by team name to view your records.</strong></td></tr>';
+    message($('#records-state'), session ? 'Enter a team name to search your records.' : 'Sign in to view your private records.');
+    try { sessionStorage.removeItem('react-manip.v1.attempt'); } catch { /* Optional storage. */ }
+    if (session) loadProfiles();
+  });
   $('#records-load-more')?.addEventListener('click', () => loadRecords(true));
   teamSearch?.addEventListener('input', () => {
     stop('records'); clearDetail(); records = []; nextCursor = null;

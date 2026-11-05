@@ -37,7 +37,8 @@
       for (const label of ['Task', 'Status', 'Episodes', 'Protocol score']) { const th = node('th', label); th.scope = 'col'; headRow.append(th); }
       head.append(headRow); table.append(head); const body = node('tbody');
       for (const task of rows) {
-        const row = node('tr'); const count = Number.isInteger(task.completed_episodes) ? `${task.completed_episodes}/45` : '—';
+        const row = node('tr'), completed = task.completed_episodes ?? task.episodes_completed;
+        const count = Number.isInteger(completed) && completed >= 0 && completed <= 45 ? `${completed}/45` : '—';
         const score = api.status(task) === 'COMPLETED' && selection.evaluation.score_kind === 'protocol' && typeof task.score === 'number' && Number.isFinite(task.score) ? task.score.toFixed(2) : '—';
         for (const value of [task.task_id ?? task.task_name ?? 'Task', api.status(task) || 'UNKNOWN', count, score]) row.append(node('td', value));
         body.append(row);
@@ -50,7 +51,7 @@
   const createVideo = (item, context) => {
     const id = String(item.artifact_id ?? item.id ?? '');
     if (!id) throw new api.ApiError('Invalid video record.');
-    const details = node('details', undefined, 'private-video'), summary = node('summary', `${item.task_id ?? 'Task'} · ${item.phase ?? 'Episode'} · ${item.episode_index ?? '—'}`);
+    const details = node('details', undefined, 'private-video'), summary = node('summary', `${item.task_id ?? 'Task'} · ${item.phase ?? 'Episode'} · ${item.episode_id ?? item.episode_index ?? '—'}`);
     const state = node('p', '', 'evaluation-message'); state.setAttribute('role', 'status');
     const video = node('video'); video.controls = true; video.playsInline = true; video.preload = 'none'; video.hidden = true;
     if (!api.demo) video.crossOrigin = 'use-credentials';
@@ -58,8 +59,9 @@
     const markExpired = () => { release(video); message(state, 'This video has expired. Evaluation scores remain available.', true); };
     const describe = () => {
       const expiry = expires(item);
-      if (expired(item)) { markExpired(); return false; }
+      if (expired(item) || ['EXPIRED', 'DELETED'].includes(String(item.status || '').toUpperCase())) { markExpired(); return false; }
       if (String(item.status || '').toUpperCase() === 'ERROR') { message(state, 'This video could not be encoded. The evaluation result is still available.', true); return false; }
+      if (String(item.status || '').toUpperCase() !== 'READY') { message(state, 'This video is still being prepared.'); return false; }
       message(state, expiry ? `Private video · expires ${expiry.toLocaleString()}` : 'Private video · retained for seven days after the evaluation finishes.');
       return true;
     };
@@ -86,14 +88,14 @@
   const loadVideos = async (append = false) => {
     if (!selection || !videoRoot.open || (append && nextCursor === null)) return;
     const context = { id: selection.id, generation }, controller = begin('videos');
-    const after = append ? nextCursor : '0';
+    const after = append ? nextCursor : '';
     if (!append) { releaseAll(); $('#video-records-list').replaceChildren(); videoIds.clear(); }
     $('#videos-load-more').disabled = true; message($('#videos-state'), 'Loading private video records…');
     if (expired(selection.evaluation)) { message($('#videos-state'), 'These videos have expired. Evaluation scores remain available.', true); $('#videos-load-more').hidden = true; $('#videos-load-more').disabled = false; videosLoaded = true; return; }
     try {
       const payload = await api.request(`/evaluations/${encodeURIComponent(context.id)}/videos?after=${encodeURIComponent(after)}&limit=100`, { signal: controller.signal });
       if (!current(context) || controller.signal.aborted) return;
-      const rows = api.rows(payload, 'videos'); nextCursor = api.cursor(payload);
+      const rows = api.rows(payload, 'videos'); nextCursor = rows.length ? api.cursor(payload, { opaque: true }) : null;
       if (nextCursor === after) throw new api.ApiError('The video cursor did not advance.');
       for (const item of rows) {
         const id = String(item.artifact_id ?? item.id ?? ''); if (videoIds.has(id)) continue;
@@ -115,7 +117,7 @@
   };
   document.addEventListener('evaluation-details-select', event => { reset(); selection = { id: event.detail.id, evaluation: event.detail.evaluation }; updateMetadata(selection.evaluation); });
   document.addEventListener('evaluation-details-update', event => {
-    if (!selection || String(event.detail.evaluation_id ?? event.detail.id) !== selection.id) return;
+    if (!selection || String(event.detail.submission_id ?? event.detail.evaluation_id ?? event.detail.id) !== selection.id) return;
     const changed = api.status(selection.evaluation) !== api.status(event.detail) || selection.evaluation.videos_expires_at !== event.detail.videos_expires_at;
     selection.evaluation = { ...selection.evaluation, ...event.detail }; updateMetadata(selection.evaluation);
     if (expired(selection.evaluation)) { releaseAll(); message($('#videos-state'), 'These videos have expired. Evaluation scores remain available.', true); }

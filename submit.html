@@ -7,6 +7,7 @@
     <meta name="website-api" content="" />
     <title>Submit an evaluation — ReAct-Manip</title>
     <link rel="stylesheet" href="styles.css?v=20261102-v1" />
+    <link rel="stylesheet" href="auth.css?v=20261104" />
   </head>
   <body class="evaluation-page">
     <header class="site-header">
@@ -25,6 +26,10 @@
         <h1>Submit an evaluation</h1>
         <p>One evaluation runs 16 tasks × 3 instances × 15 episodes: 720 episodes in total, including 240 scored exam episodes.</p>
       </div>
+      <section id="evaluation-portal" class="evaluation-account" aria-labelledby="evaluation-portal-title" hidden>
+        <div class="evaluation-account-heading"><h2 id="evaluation-portal-title">Evaluation portal</h2><p>Sign in with your team account to access private evaluation records. New evaluations are currently paused during integration testing.</p></div>
+        <a class="button primary" href="https://8.130.107.114:18443/submit.html">Open evaluation portal <span aria-hidden="true">↗</span></a>
+      </section>
       <aside class="evaluation-demo" aria-labelledby="evaluation-demo-title">
         <div>
           <span class="submit-label">Interactive demo</span>
@@ -37,6 +42,16 @@
         </div>
       </aside>
       <p class="evaluation-message" id="service-state" role="status">Private records and videos are available only to the submitting account.</p>
+      <section id="account-panel" class="evaluation-account" aria-labelledby="account-title" hidden>
+        <div class="evaluation-account-heading"><h2 id="account-title">Team account</h2><p id="account-state" class="evaluation-message" role="status" aria-live="polite">Checking your session…</p></div>
+        <form id="login-form" class="evaluation-account-form" hidden>
+          <label class="evaluation-field" for="login-team"><span>Team name</span><input id="login-team" name="team_name" type="text" maxlength="120" autocomplete="username" required /></label>
+          <label class="evaluation-field" for="login-password"><span>Password</span><input id="login-password" name="password" type="password" maxlength="200" autocomplete="current-password" required /></label>
+          <button id="sign-in" class="button primary" type="submit">Sign in</button>
+        </form>
+        <p id="account-help" class="field-hint" hidden>Use the team account provided by the organizers. Your account password is separate from your model API key.</p>
+        <button id="sign-out" class="button" type="button" hidden>Sign out</button>
+      </section>
       <div class="evaluation-tabs" role="tablist" aria-label="Evaluation options">
         <button id="submission-tab" class="evaluation-tab" type="button" role="tab" aria-selected="true" aria-controls="submission-panel" tabindex="0" data-evaluation-tab="submission">Submit evaluation</button>
         <button id="records-tab" class="evaluation-tab" type="button" role="tab" aria-selected="false" aria-controls="records-panel" tabindex="-1" data-evaluation-tab="records">Evaluation records</button>
@@ -68,7 +83,7 @@
             </label>
             <label class="evaluation-field" for="participant-api-key"><span>Model API key <span class="required-mark" aria-hidden="true">*</span></span>
               <input id="participant-api-key" name="model_api_key" type="password" placeholder="Model service API key" autocomplete="off" spellcheck="false" required />
-              <small class="field-hint">Sent securely with the submission. Never put the key in the URL.</small>
+              <small class="field-hint">Sent securely to the backend with your model URL for evaluation. Never put the key in the URL.</small>
             </label>
           </div>
           <div class="submission-section-heading"><h3>Team and contact information</h3></div>
@@ -96,7 +111,7 @@
           </div>
         </form>
         <div id="submission-result" class="submission-result" hidden>
-          <div><span class="submit-label">Evaluation submitted</span><strong id="submitted-team-name"></strong></div>
+          <div><span class="submit-label" id="submission-result-label">Evaluation submitted</span><strong id="submitted-team-name"></strong></div>
           <span id="submission-status"></span>
           <button id="view-evaluation-records" class="button" type="button">View team records ↗</button>
         </div>
@@ -137,8 +152,9 @@
     <footer class="site-footer"><div class="container footer-inner"><span>ReAct-Manip · 2026</span><span>Questions: <a href="mailto:wkm@qingyandata.com">wkm@qingyandata.com</a></span></div></footer>
     <script src="tasks.js?v=20261030-demo" defer></script>
     <script src="demo-api.js?v=20261102-v1" defer></script>
-    <script src="evaluation-api.js?v=20261102-v1" defer></script>
-    <script src="leaderboard.js?v=20261102-v1" defer></script>
-    <script src="simulation-details.js?v=20261102-v1" defer></script>
+    <script src="evaluation-api.js?v=20261104" defer></script>
+    <script src="auth.js?v=20261105" defer></script>
+    <script src="leaderboard.js?v=20261104" defer></script>
+    <script src="simulation-details.js?v=20261104" defer></script>
   </body>
 </html>

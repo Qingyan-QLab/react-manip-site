@@ -47,7 +47,10 @@
         method, headers, signal: controller.signal, credentials: 'include', cache: 'no-store', redirect: 'error',
         ...(body === undefined ? {} : { body: JSON.stringify(body) })
       });
-      if (!response.ok) throw new ApiError(messages[response.status] || `The website service returned an error (${response.status}).`, response.status);
+      if (!response.ok) {
+        if (response.status === 401 && path !== '/login') document.dispatchEvent(new Event('react-manip-session-expired'));
+        throw new ApiError(messages[response.status] || `The website service returned an error (${response.status}).`, response.status);
+      }
       if (response.status === 204) return null;
       try { return await response.json(); } catch { throw new ApiError('The website service returned an invalid response.'); }
     } catch (error) {
@@ -70,14 +73,15 @@
     if (!Array.isArray(list) || list.some(row => !row || typeof row !== 'object' || Array.isArray(row))) throw new ApiError(`Invalid ${key} response.`);
     return list;
   };
-  const cursor = (payload) => {
+  const cursor = (payload, { opaque = false } = {}) => {
     const value = payload?.next_cursor;
     if (value === undefined || value === null || value === '') return null;
     if ((typeof value === 'number' && Number.isSafeInteger(value) && value >= 0) || (typeof value === 'string' && /^\d+$/.test(value))) return String(value);
+    if (opaque && typeof value === 'string' && /^[A-Za-z0-9_.:-]{1,200}$/.test(value)) return value;
     throw new ApiError('Invalid pagination cursor.');
   };
   const normalizeTeam = value => String(value ?? '').normalize('NFKC').trim().replace(/\s+/gu, ' ').toLowerCase();
-  const status = value => String(value?.status ?? value ?? '').toUpperCase();
+  const status = value => value?.relay_state === 'REJECTED' ? 'FAILED' : String(value?.status ?? value ?? '').toUpperCase();
   const terminal = value => ['COMPLETED', 'INVALID', 'FAILED', 'CANCELLED'].includes(status(value));
   const score = item => status(item) === 'COMPLETED' && item?.score_kind === 'protocol' && typeof item.score === 'number' && Number.isFinite(item.score) ? item.score.toFixed(2) : '—';
   const date = value => {
