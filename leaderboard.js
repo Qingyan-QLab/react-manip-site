@@ -7,6 +7,21 @@
   let records = [], nextCursor = null, searchedTeam = '', selected = null, submittedTeam = '', submitting = false, memoryAttempt, sessionGeneration = 0;
   const escape = value => String(value ?? '—').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
   const category = value => ({ agent: 'Agent', model: 'Model' }[value] || '—');
+  const unavailable = '<span class="ranking-unavailable" role="img" aria-label="Not available">—</span>';
+  const rankBadge = (item, index) => {
+    const rank = Number.isSafeInteger(item.rank) && item.rank > 0 ? item.rank : index + 1;
+    const medal = ['🥇', '🥈', '🥉'][rank - 1];
+    return medal ? `<span class="rank-value rank-medal" role="img" aria-label="Rank ${rank}">${medal}</span>` : `<span class="rank-value">${rank}</span>`;
+  };
+  const examSuccess = item => {
+    const passed = item.exam_passed, count = item.exam_count;
+    if (!Number.isSafeInteger(passed) || !Number.isSafeInteger(count) || count <= 0 || count > 720 || passed < 0 || passed > count) return unavailable;
+    return `${(passed / count * 100).toFixed(2)}%<small class="record-version">${passed} / ${count}</small>`;
+  };
+  const rankingVersion = item => {
+    const version = String(item.model_version ?? '').trim();
+    return version && version.toLowerCase() !== 'low' ? `<small class="record-version">${escape(version)}</small>` : '';
+  };
   const message = (node, text, error = false) => { if (node) { node.textContent = text; node.dataset.state = error ? 'error' : ''; } };
   const awaitingRelay = item => ['PREPARED', 'UNCERTAIN'].includes(item.relay_state);
   const relayNeedsAttention = item => awaitingRelay(item) && item.relay_can_retry === false;
@@ -257,14 +272,14 @@
       for (const option of options) if (typeof option.profile_id === 'string') select.add(new Option(api.profileLabel(option), option.profile_id));
       if (profile) { if (![...select.options].some(option => option.value === profile)) throw new api.ApiError('The benchmark version is missing from the available list.'); select.value = profile; }
       select.disabled = options.length === 0;
-      $('#leaderboard-body').innerHTML = rows.length ? rows.map((row, index) => `<tr><td><span class="rank-value">${Number.isSafeInteger(row.rank) && row.rank > 0 ? row.rank : index + 1}</span></td><td>${escape(row.team_display_name)}</td><td>${escape(row.model_id)}<small class="record-version">${escape(row.model_version)}</small></td><td>${escape(category(row.website_metadata?.submission_type))}</td><td class="score-value">${escape(api.score(row))}</td></tr>`).join('') : '<tr class="leaderboard-empty"><td colspan="5"><strong>No verified scores yet.</strong></td></tr>';
+      $('#leaderboard-body').innerHTML = rows.length ? rows.map((row, index) => `<tr><td>${rankBadge(row, index)}</td><td>${escape(row.team_display_name)}</td><td>${escape(row.model_id)}${rankingVersion(row)}</td><td>${escape(category(row.website_metadata?.submission_type))}</td><td class="score-value">${escape(api.score(row))}</td><td class="exam-success">${examSuccess(row)}</td><td>${unavailable}</td><td>${unavailable}</td></tr>`).join('') : '<tr class="leaderboard-empty"><td colspan="8"><strong>No verified scores yet.</strong></td></tr>';
       $('#leaderboard-count').textContent = `${rows.length} entries`;
       message($('#leaderboard-status'), api.demo ? 'Demo rankings · illustrative sample data' : 'Rankings are open.'); $('.leaderboard-connection').dataset.state = 'connected';
       timers.set('rankings', setTimeout(loadRankings, 15000));
     } catch (error) {
       if (error.name === 'AbortError' || controller.signal.aborted) return;
       const closed = error.code === 'rankings_closed', unconfigured = error.code === 'rankings_unconfigured';
-      $('#leaderboard-body').innerHTML = `<tr class="leaderboard-empty"><td colspan="5"><strong>${escape(error.message)}</strong></td></tr>`; $('#leaderboard-count').textContent = '— entries';
+      $('#leaderboard-body').innerHTML = `<tr class="leaderboard-empty"><td colspan="8"><strong>${escape(error.message)}</strong></td></tr>`; $('#leaderboard-count').textContent = '— entries';
       message($('#leaderboard-status'), error.message, !closed && !unconfigured);
       $('.leaderboard-connection').dataset.state = closed ? 'closed' : unconfigured ? 'idle' : 'error';
       if (closed || unconfigured) $('#ranking-profile').disabled = true;

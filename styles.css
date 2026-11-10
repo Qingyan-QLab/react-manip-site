@@ -728,11 +728,14 @@ h2 { font-size: clamp(34px, 4vw, 46px); }
 /* Website V1: profile-separated scores and owner-scoped evaluation records. */
 .ranking-profile-field { max-width: 460px; margin: 18px 0; }
 .record-version { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
-.live-leaderboard th:nth-child(1), .live-leaderboard td:nth-child(1) { width: 8%; }
-.live-leaderboard th:nth-child(2), .live-leaderboard td:nth-child(2) { width: 24%; }
-.live-leaderboard th:nth-child(3), .live-leaderboard td:nth-child(3) { width: 34%; text-align: left; }
-.live-leaderboard th:nth-child(4), .live-leaderboard td:nth-child(4) { width: 16%; text-align: left; }
-.live-leaderboard th:nth-child(5), .live-leaderboard td:nth-child(5) { width: 18%; text-align: right; }
+.live-leaderboard th:nth-child(1), .live-leaderboard td:nth-child(1) { width: 5%; }
+.live-leaderboard th:nth-child(2), .live-leaderboard td:nth-child(2) { width: 17%; }
+.live-leaderboard th:nth-child(3), .live-leaderboard td:nth-child(3) { width: 29%; text-align: left; }
+.live-leaderboard th:nth-child(4), .live-leaderboard td:nth-child(4) { width: 8%; text-align: left; }
+.live-leaderboard th:nth-child(5), .live-leaderboard td:nth-child(5) { width: 10%; text-align: left; }
+.live-leaderboard th:nth-child(6), .live-leaderboard td:nth-child(6) { width: 11%; }
+.live-leaderboard th:nth-child(7), .live-leaderboard td:nth-child(7) { width: 12%; }
+.live-leaderboard th:nth-child(8), .live-leaderboard td:nth-child(8) { width: 8%; }
 .evaluation-status[data-status="invalid"], .evaluation-status[data-status="cancelled"] { border-color: #f4d2ce; background: #fff1ef; color: #b42318; }
 .evaluation-records { min-width: 940px; }
 .evaluation-records th, .evaluation-records td { overflow-wrap: anywhere; }
@@ -747,3 +750,30 @@ h2 { font-size: clamp(34px, 4vw, 46px); }
 #record-submission-info dt { color: var(--muted); }
 #record-submission-info dd { margin: 0; }
 @media (max-width: 600px) { .ranking-profile-field { max-width: 100%; } }
+
+/* One API-backed ranking table for every result in the selected version. */
+.live-leaderboard { min-width: 1040px; }
+.live-leaderboard th, .live-leaderboard td { padding: 16px 12px; }
+.live-leaderboard th { line-height: 1.5; }
+.live-leaderboard td { font-variant-numeric: tabular-nums; }
+.live-leaderboard td:nth-child(2), .live-leaderboard td:nth-child(3) { overflow-wrap: anywhere; }
+.live-leaderboard td:nth-child(4) { white-space: nowrap; }
+.live-leaderboard tbody tr:last-child td { border-bottom: 0; }
+.live-leaderboard .score-value { color: #25324a; font-size: 16px; }
+.rank-medal { display: inline-block; font-size: 24px; line-height: 1; }
+.ranking-unavailable { color: #8491a3; }
+.rankings-scroll-hint { display: none; margin: 0 0 10px; color: #68778e; font-size: 12px; }
+.rankings-scroll-hint span { margin-left: 6px; }
+@media (max-width: 720px) {
+  .rankings-scroll-hint { display: block; }
+  .live-leaderboard { min-width: 960px; }
+  .live-leaderboard th, .live-leaderboard td { padding-left: 10px; padding-right: 10px; }
+  .live-leaderboard th:nth-child(1), .live-leaderboard td:nth-child(1) { width: 42px; }
+  .live-leaderboard th:nth-child(2), .live-leaderboard td:nth-child(2) { width: 145px; }
+  .live-leaderboard th:nth-child(3), .live-leaderboard td:nth-child(3) { width: 230px; }
+  .live-leaderboard th:nth-child(4), .live-leaderboard td:nth-child(4) { width: 76px; }
+  .live-leaderboard th:nth-child(5), .live-leaderboard td:nth-child(5) { width: 92px; }
+  .live-leaderboard th:nth-child(6), .live-leaderboard td:nth-child(6) { width: 128px; }
+  .live-leaderboard th:nth-child(7), .live-leaderboard td:nth-child(7) { width: 157px; }
+  .live-leaderboard th:nth-child(8), .live-leaderboard td:nth-child(8) { width: 90px; }
+}
