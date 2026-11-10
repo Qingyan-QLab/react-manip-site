@@ -6,7 +6,7 @@
     <meta name="description" content="Submit a ReAct-Manip model evaluation and find your private evaluation records by team name." />
     <meta name="website-api" content="" />
     <title>Submit an evaluation — ReAct-Manip</title>
-    <link rel="stylesheet" href="styles.css?v=20261110-branding-v1" />
+    <link rel="stylesheet" href="styles.css?v=20261110-records-v2" />
     <link rel="stylesheet" href="auth.css?v=20261104" />
   </head>
   <body class="evaluation-page">
@@ -26,6 +26,13 @@
         <h1>Submit an evaluation</h1>
         <p>One evaluation runs 16 tasks × 3 instances × 15 episodes: 720 episodes in total, including 240 scored exam episodes.</p>
       </div>
+      <section class="evaluation-account" aria-labelledby="public-records-title">
+        <div class="evaluation-account-heading"><h2 id="public-records-title">Published evaluation records</h2><p>Search by Team name without signing in. View all practice and exam records, with videos for exam episodes.</p></div>
+        <form action="records.html" method="get" class="evaluation-records-search">
+          <label class="evaluation-field" for="public-team-name"><span>Team name</span><input id="public-team-name" name="team" type="search" maxlength="120" placeholder="Enter the full team name" required /></label>
+          <button class="button primary" type="submit">Find published records ↗</button>
+        </form>
+      </section>
       <section id="evaluation-portal" class="evaluation-account" aria-labelledby="evaluation-portal-title" hidden>
         <div class="evaluation-account-heading"><h2 id="evaluation-portal-title">Evaluation portal</h2><p>Sign in with your team account to access private evaluation records. New evaluations are currently paused during integration testing.</p></div>
         <a class="button primary" href="https://8.130.107.114:18443/submit.html">Open evaluation portal <span aria-hidden="true">↗</span></a>
@@ -154,7 +161,7 @@
     <script src="demo-api.js?v=20261105-rankings" defer></script>
     <script src="evaluation-api.js?v=20261110-version-label" defer></script>
     <script src="auth.js?v=20261105" defer></script>
-    <script src="leaderboard.js?v=20261110-branding-v1" defer></script>
+    <script src="leaderboard.js?v=20261110-records-v2" defer></script>
     <script src="simulation-details.js?v=20261110-version-label" defer></script>
   </body>
 </html>

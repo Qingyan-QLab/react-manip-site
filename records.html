@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Browse published ReAct-Manip evaluation records and exam videos by team name." />
+    <meta name="website-api" content="" />
+    <meta name="website-rankings" content="https://8.130.107.114:18443" />
+    <title>Evaluation records — ReAct-Manip</title>
+    <link rel="stylesheet" href="styles.css?v=20261110-records-v2" />
+    <link rel="stylesheet" href="records.css?v=20261110-records-v2" />
+  </head>
+  <body class="published-records-page">
+    <header class="site-header">
+      <div class="container header-inner">
+        <a class="brand" href="index.html#top">ReAct-Manip</a>
+        <nav aria-label="Primary navigation"><a href="index.html#task-catalog">16 Tasks</a><a href="index.html#leaderboard">Leaderboard</a><a href="index.html#citation">Cite</a></nav>
+      </div>
+    </header>
+    <main class="container published-main" id="top">
+      <a class="evaluation-back" href="index.html#leaderboard">← Back to leaderboard</a>
+      <div class="published-heading"><span class="eyebrow">ReAct-Manip · Results</span><h1>Evaluation records</h1><p>Find published evaluation records and exam videos by team name. No sign-in is required.</p></div>
+      <form id="published-team-form" class="published-search">
+        <label class="evaluation-field" for="published-team"><span>Team name</span><input id="published-team" name="team_name" type="search" maxlength="120" placeholder="Enter the full team name" required autocomplete="off" /></label>
+        <button class="button primary" id="published-search-button" type="submit">Find records</button>
+      </form>
+      <p id="published-state" class="published-message" role="status" aria-live="polite">Enter a team name to find its published records.</p>
+      <button id="published-retry" class="button" type="button" hidden>Try again</button>
+      <section id="published-matches" class="published-matches" aria-labelledby="published-matches-heading" hidden><h2 id="published-matches-heading">Published evaluations</h2><div id="published-match-list"></div></section>
+
+      <section id="published-content" aria-labelledby="published-model" hidden>
+        <div class="published-model-heading"><div><span id="published-team-label" class="published-kicker"></span><h2 id="published-model"></h2><p id="published-version"></p></div><span id="published-benchmark" class="published-version-badge">ReAct-Manip v1.0</span></div>
+        <dl class="published-stats"><div><dt>Exam score /100</dt><dd id="published-score">—</dd></div><div><dt>Exam success</dt><dd id="published-success">—</dd></div><div><dt>Evaluation records</dt><dd id="published-total">—</dd></div><div><dt>Exam videos</dt><dd id="published-video-total">—</dd></div></dl>
+        <div class="published-views" role="group" aria-label="Records view"><button id="published-view-all" type="button" aria-pressed="true">All evaluation records</button><button id="published-view-videos" type="button" aria-pressed="false">Exam videos</button></div>
+        <p id="published-scope" class="published-scope">All 720 episodes: 480 practice and 240 exam records. Videos cover exam episodes only.</p>
+        <div class="published-filters">
+          <label class="evaluation-field" for="published-task"><span>Task</span><select id="published-task"><option value="">All tasks</option></select></label>
+          <label class="evaluation-field" for="published-instance"><span>Setting</span><select id="published-instance"><option value="">All settings</option><option value="000">Setting 1</option><option value="001">Setting 2</option><option value="002">Setting 3</option></select></label>
+          <label class="evaluation-field" for="published-phase"><span>Phase</span><select id="published-phase"><option value="">Practice and exam</option><option value="practice">Practice</option><option value="exam">Exam</option></select></label>
+        </div>
+        <div class="published-results-toolbar"><p id="published-filter-count" role="status" aria-live="polite"></p><span>30 episodes per page</span></div>
+        <div class="published-table-wrap" tabindex="0" role="region" aria-label="Episode records"><table class="published-table"><thead><tr><th scope="col">Task</th><th scope="col">Setting</th><th scope="col">Episode</th><th scope="col">Score</th><th scope="col">Result</th><th scope="col">Video</th></tr></thead><tbody id="published-episodes"></tbody></table></div>
+        <nav class="published-pagination" aria-label="Episode pages"><button id="published-previous" class="button" type="button" disabled>Previous</button><span id="published-page" aria-live="polite"></span><button id="published-next" class="button" type="button" disabled>Next</button></nav>
+
+        <section id="published-episode-detail" class="published-detail" aria-labelledby="published-episode-title" tabindex="-1" hidden>
+          <div class="published-detail-heading"><div><span id="published-episode-phase" class="published-kicker"></span><h2 id="published-episode-title"></h2><p id="published-episode-instance"></p></div><span id="published-episode-result" class="published-outcome"></span></div>
+          <dl id="published-episode-values" class="published-values"></dl>
+          <section class="published-video-section" aria-labelledby="published-video-heading"><h3 id="published-video-heading">Episode video</h3><p id="published-video-state" class="published-message" role="status" aria-live="polite"></p><div class="published-file-actions"><button id="published-load-video" class="button primary" type="button" hidden>Load video</button><a id="published-download-video" class="button" target="_blank" rel="noopener" hidden>Download video</a></div><video id="published-video" controls playsinline preload="none" crossorigin="anonymous" hidden></video></section>
+          <section class="published-log-section" aria-labelledby="published-log-heading"><h3 id="published-log-heading">Detailed records</h3><p class="published-file-hint">Choose a file to preview its first 256 KB, or download the complete file. Files load only when requested.</p><div class="published-log-controls"><label class="evaluation-field" for="published-file"><span>Record file</span><select id="published-file"></select></label><button id="published-preview-file" class="button" type="button">Preview file</button><a id="published-download-file" class="button" target="_blank" rel="noopener" hidden>Download complete file</a></div><p id="published-file-state" class="published-message" role="status" aria-live="polite"></p><div id="published-preview" hidden><div class="published-preview-heading"><span id="published-preview-name"></span><button id="published-close-preview" type="button">Close preview</button></div><pre id="published-file-text" tabindex="0" aria-label="Record file preview"></pre></div></section>
+        </section>
+      </section>
+      <noscript><p class="published-message">Enable JavaScript to browse published records and videos.</p></noscript>
+    </main>
+    <footer class="site-footer"><div class="container footer-inner"><span>ReAct-Manip · 2026</span><a href="index.html#leaderboard">Leaderboard</a></div></footer>
+    <script src="records.js?v=20261110-records-v2" defer></script>
+  </body>
+</html>

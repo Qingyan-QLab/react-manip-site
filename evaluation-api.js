@@ -13,7 +13,8 @@
     if (!value) throw new ApiError('Online evaluation is not available yet.');
     let url;
     try { url = new URL(value); } catch { throw new ApiError('The website service is not configured correctly.'); }
-    if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || !['', '/'].includes(url.pathname)) {
+    const localPreview = url.protocol === 'http:' && ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) && url.origin === location.origin;
+    if ((!localPreview && url.protocol !== 'https:') || url.username || url.password || url.search || url.hash || !['', '/'].includes(url.pathname)) {
       throw new ApiError('The website service requires an HTTPS origin.');
     }
     return url.origin;

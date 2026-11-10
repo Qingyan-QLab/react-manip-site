@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://quotient-lab.github.io" crossorigin />
     <link rel="dns-prefetch" href="//quotient-lab.github.io" />
     <title>ReAct-Manip | Practice, Adapt, Perform</title>
-    <link rel="stylesheet" href="styles.css?v=20261110-branding-v1" />
+    <link rel="stylesheet" href="styles.css?v=20261110-records-v2" />
   </head>
   <body>
     <header class="site-header">
@@ -219,10 +219,11 @@
             <a class="button primary" id="leaderboard-submit-link" href="https://8.130.107.114:18443/submit.html">Evaluation portal <span aria-hidden="true">↗</span></a>
           </div>
           <p class="leaderboard-note">Highest verified score per team within each benchmark version. Scores are ordered from high to low; ties go to the earlier recorded result. Updates every 15 seconds. Protocol trial scores only.</p>
+          <p class="leaderboard-public-records"><a href="records.html">Find evaluation records by Team name <span aria-hidden="true">↗</span></a><span>No sign-in required. All practice and exam records; exam videos only.</span></p>
           <label class="evaluation-field ranking-profile-field" for="ranking-profile"><span>Benchmark version</span><select id="ranking-profile" disabled><option value="">No versions loaded</option></select></label>
           <div class="leaderboard-toolbar"><div class="leaderboard-connection" data-state="idle"><i aria-hidden="true"></i><span id="leaderboard-status" role="status">Checking rankings…</span></div><span id="leaderboard-count">— entries</span></div>
           <p class="rankings-scroll-hint">Swipe to view all columns <span aria-hidden="true">↔</span></p>
-          <div class="leaderboard-table-wrap" tabindex="0" role="region" aria-label="Leaderboard rankings"><table class="live-leaderboard"><thead><tr><th scope="col">Rank</th><th scope="col">Team name</th><th scope="col">Model</th><th scope="col">Category</th><th scope="col">Protocol score /100</th><th scope="col">Exam success</th><th scope="col">Evaluation records</th><th scope="col">Videos</th></tr></thead><tbody id="leaderboard-body"><tr class="leaderboard-empty"><td colspan="8"><span>REACT-MANIP</span><strong>Checking rankings…</strong></td></tr></tbody></table></div>
+          <div class="leaderboard-table-wrap" tabindex="0" role="region" aria-label="Leaderboard rankings"><table class="live-leaderboard"><thead><tr><th scope="col">Rank</th><th scope="col">Team name</th><th scope="col">Model</th><th scope="col">Category</th><th scope="col">Protocol score /100</th><th scope="col">Exam success</th><th scope="col">Evaluation records</th><th scope="col">Exam videos</th></tr></thead><tbody id="leaderboard-body"><tr class="leaderboard-empty"><td colspan="8"><span>REACT-MANIP</span><strong>Checking rankings…</strong></td></tr></tbody></table></div>
         </div>
       </section>
 
@@ -265,7 +266,7 @@
     <script src="script.js?v=20261030-demo" defer></script>
     <script src="demo-api.js?v=20261105-rankings" defer></script>
     <script src="evaluation-api.js?v=20261110-version-label" defer></script>
-    <script src="leaderboard.js?v=20261110-branding-v1" defer></script>
+    <script src="leaderboard.js?v=20261110-records-v2" defer></script>
   </body>
 </html>
 

@@ -28,6 +28,13 @@
     if (!openAITeams.has(name)) return escape(name);
     return `<span class="ranking-team"><img class="ranking-team-logo" src="image/openai-logo.png" width="24" height="24" alt="" aria-hidden="true" /><span>${escape(name)}</span></span>`;
   };
+  const rankingArchive = (item, videos = false) => {
+    const record = item.public_record;
+    if (item.result_source !== 'imported' || !record || record.record_id !== item.import_id ||
+        !/^[A-Za-z0-9_.:-]{1,128}$/.test(record.record_id) || record.episode_count !== 720 || record.video_count !== 240) return unavailable;
+    const url = `records.html?team=${encodeURIComponent(item.team_display_name)}&record=${encodeURIComponent(record.record_id)}${videos ? '&view=videos' : ''}`;
+    return `<a class="ranking-record-link" href="${escape(url)}">${videos ? '240 exam videos' : '720 records'} <span aria-hidden="true">↗</span></a><small class="record-version">${videos ? 'Exam episodes only' : 'Practice + exam'}</small>`;
+  };
   const message = (node, text, error = false) => { if (node) { node.textContent = text; node.dataset.state = error ? 'error' : ''; } };
   const awaitingRelay = item => ['PREPARED', 'UNCERTAIN'].includes(item.relay_state);
   const relayNeedsAttention = item => awaitingRelay(item) && item.relay_can_retry === false;
@@ -278,7 +285,7 @@
       for (const option of options) if (typeof option.profile_id === 'string') select.add(new Option(api.profileLabel(option), option.profile_id));
       if (profile) { if (![...select.options].some(option => option.value === profile)) throw new api.ApiError('The benchmark version is missing from the available list.'); select.value = profile; }
       select.disabled = options.length === 0;
-      $('#leaderboard-body').innerHTML = rows.length ? rows.map((row, index) => `<tr><td>${rankBadge(row, index)}</td><td>${rankingTeam(row)}</td><td>${escape(row.model_id)}${rankingVersion(row)}</td><td>${escape(category(row.website_metadata?.submission_type))}</td><td class="score-value">${escape(api.score(row))}</td><td class="exam-success">${examSuccess(row)}</td><td>${unavailable}</td><td>${unavailable}</td></tr>`).join('') : '<tr class="leaderboard-empty"><td colspan="8"><strong>No verified scores yet.</strong></td></tr>';
+      $('#leaderboard-body').innerHTML = rows.length ? rows.map((row, index) => `<tr><td>${rankBadge(row, index)}</td><td>${rankingTeam(row)}</td><td>${escape(row.model_id)}${rankingVersion(row)}</td><td>${escape(category(row.website_metadata?.submission_type))}</td><td class="score-value">${escape(api.score(row))}</td><td class="exam-success">${examSuccess(row)}</td><td>${rankingArchive(row)}</td><td>${rankingArchive(row, true)}</td></tr>`).join('') : '<tr class="leaderboard-empty"><td colspan="8"><strong>No verified scores yet.</strong></td></tr>';
       $('#leaderboard-count').textContent = `${rows.length} entries`;
       message($('#leaderboard-status'), api.demo ? 'Demo rankings · illustrative sample data' : 'Rankings are open.'); $('.leaderboard-connection').dataset.state = 'connected';
       timers.set('rankings', setTimeout(loadRankings, 15000));
