@@ -3,6 +3,8 @@
   'use strict';
   const api = window.ReactManipAPI, $ = selector => document.querySelector(selector);
   const form = $('#submission-form'), teamSearch = $('#records-team-name');
+  const hiddenRankingProfile = 'react-manip-v1.1-20261110-https-keepalive';
+  const rankingProfiles = payload => api.rows(payload, 'profiles').filter(option => typeof option.profile_id === 'string' && option.profile_id !== hiddenRankingProfile);
   const controllers = new Map(), timers = new Map(), active = new Map(), profiles = new Set();
   let records = [], nextCursor = null, searchedTeam = '', selected = null, submittedTeam = '', submitting = false, memoryAttempt, sessionGeneration = 0;
   const escape = value => String(value ?? '—').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
@@ -275,10 +277,21 @@
     if (!$('#leaderboard-body') || document.hidden) return;
     const controller = begin('rankings'), chosen = $('#ranking-profile').value;
     try {
-      const payload = await api.rankings(chosen, { signal: controller.signal });
+      let requested = chosen === hiddenRankingProfile ? '' : chosen;
+      let payload = await api.rankings(requested, { signal: controller.signal });
       if (controller.signal.aborted) return;
-      const options = api.rows(payload, 'profiles'), profile = payload.profile_id;
-      if (chosen && profile !== chosen) throw new api.ApiError('Results do not match the selected benchmark version.');
+      if (requested && payload.profile_id !== requested) throw new api.ApiError('Results do not match the selected benchmark version.');
+      if (payload.profile_id === hiddenRankingProfile) {
+        requested = rankingProfiles(payload)[0]?.profile_id || '';
+        if (requested) {
+          payload = await api.rankings(requested, { signal: controller.signal });
+          if (controller.signal.aborted) return;
+          if (payload.profile_id !== requested) throw new api.ApiError('Results do not match the selected benchmark version.');
+        } else {
+          payload = { profiles: [], profile_id: null, rankings: [] };
+        }
+      }
+      const options = rankingProfiles(payload), profile = payload.profile_id;
       const rows = api.rows(payload, 'rankings');
       if (rows.length && (!profile || rows.some(row => row.profile_id !== profile || api.status(row) !== 'COMPLETED' || row.completed_episodes !== 720 || row.score_kind !== 'protocol' || row.eligible_for_ranking !== true || typeof row.score !== 'number' || !Number.isFinite(row.score) || row.score < 0 || row.score > 100))) throw new api.ApiError('The service returned incompatible ranking results.');
       const select = $('#ranking-profile'); select.replaceChildren(new Option('Select a benchmark version', ''));
