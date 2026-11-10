@@ -73,9 +73,9 @@
             <label class="evaluation-field" for="model-version"><span>Model version <span class="required-mark" aria-hidden="true">*</span></span>
               <input id="model-version" name="model_version" type="text" placeholder="v1" maxlength="120" autocomplete="off" required />
             </label>
-            <label class="evaluation-field" for="evaluation-profile"><span>Evaluation profile <span class="required-mark" aria-hidden="true">*</span></span>
-              <select id="evaluation-profile" name="profile_id" required disabled><option value="">No published profiles loaded</option></select>
-              <small class="field-hint">Choose a published evaluation version. Results from different profiles are kept separate.</small>
+            <label class="evaluation-field" for="evaluation-profile"><span>Benchmark version <span class="required-mark" aria-hidden="true">*</span></span>
+              <select id="evaluation-profile" name="profile_id" required disabled><option value="">No benchmark versions loaded</option></select>
+              <small class="field-hint">Choose a benchmark version. Results from different versions are ranked separately.</small>
             </label>
             <label class="evaluation-field" for="participant-api-url"><span>Model HTTPS URL <span class="required-mark" aria-hidden="true">*</span></span>
               <input id="participant-api-url" name="model_endpoint" type="url" placeholder="https://model.example/evaluate" autocomplete="off" spellcheck="false" required />
@@ -106,7 +106,7 @@
             </label>
           </div>
           <div class="evaluation-form-footer">
-            <p id="evaluation-state" class="evaluation-message" role="status" aria-live="polite">Loading published evaluation profiles…</p>
+            <p id="evaluation-state" class="evaluation-message" role="status" aria-live="polite">Loading benchmark versions…</p>
             <button class="button primary" id="submit-evaluation" type="submit" disabled>Submit evaluation ↗</button>
           </div>
         </form>
@@ -129,7 +129,7 @@
         </form>
         <div class="evaluation-records-toolbar"><p id="records-state" class="evaluation-message" role="status" aria-live="polite">Enter a team name to search your records.</p><span id="records-count">— records</span></div>
         <div class="leaderboard-table-wrap" role="region" aria-label="Evaluation records table" tabindex="0">
-          <table class="evaluation-records"><thead><tr><th scope="col">Team name</th><th scope="col">Model</th><th scope="col">Profile</th><th scope="col">Category</th><th scope="col">Organization</th><th scope="col">Status</th><th scope="col">Protocol score</th></tr></thead>
+          <table class="evaluation-records"><thead><tr><th scope="col">Team name</th><th scope="col">Model</th><th scope="col">Benchmark version</th><th scope="col">Category</th><th scope="col">Organization</th><th scope="col">Status</th><th scope="col">Protocol score</th></tr></thead>
             <tbody id="evaluation-records-body"><tr class="leaderboard-empty"><td colspan="7"><strong>Find your evaluation history.</strong><small>Search by team name to find your evaluations.</small></td></tr></tbody>
           </table>
         </div>
@@ -152,9 +152,9 @@
     <footer class="site-footer"><div class="container footer-inner"><span>ReAct-Manip · 2026</span><span>Questions: <a href="mailto:wkm@qingyandata.com">wkm@qingyandata.com</a></span></div></footer>
     <script src="tasks.js?v=20261030-demo" defer></script>
     <script src="demo-api.js?v=20261105-rankings" defer></script>
-    <script src="evaluation-api.js?v=20261105-rankings" defer></script>
+    <script src="evaluation-api.js?v=20261110-version-label" defer></script>
     <script src="auth.js?v=20261105" defer></script>
-    <script src="leaderboard.js?v=20261105-rankings" defer></script>
-    <script src="simulation-details.js?v=20261104" defer></script>
+    <script src="leaderboard.js?v=20261110-version-label" defer></script>
+    <script src="simulation-details.js?v=20261110-version-label" defer></script>
   </body>
 </html>

@@ -45,7 +45,7 @@
   const renderRecords = () => {
     $('#evaluation-records-body').innerHTML = records.length ? records.map(item => `<tr>
       <td><button type="button" class="evaluation-record-link" data-evaluation-id="${escape(idOf(item))}">${escape(item.team_display_name)}</button></td>
-      <td>${escape(item.model_id)}<small class="record-version">${escape(item.model_version)}</small></td><td>${escape(item.profile_id)}</td>
+      <td>${escape(item.model_id)}<small class="record-version">${escape(item.model_version)}</small></td><td>${escape(api.profileLabel(item))}</td>
       <td>${escape(category(item.website_metadata?.submission_type))}</td><td>${escape(item.website_metadata?.organization)}</td>
       <td>${badge(item)}</td><td>${escape(api.score(item))}</td></tr>`).join('') : `<tr class="leaderboard-empty"><td colspan="7"><strong>No matching records on the pages searched.</strong><small>${nextCursor !== null ? 'Search the next page to continue.' : 'Check the team name and the account you are signed in to.'}</small></td></tr>`;
     $('#records-count').textContent = `${records.length} matching ${records.length === 1 ? 'record' : 'records'}`;
@@ -108,16 +108,16 @@
       const list = api.rows(await api.request('/profiles', { signal: controller.signal }), 'profiles');
       if (controller.signal.aborted) return;
       const select = $('#evaluation-profile');
-      select.replaceChildren(new Option('Choose a published profile', '')); profiles.clear();
+      select.replaceChildren(new Option('Choose a benchmark version', '')); profiles.clear();
       for (const item of list) {
         const id = item.profile_id ?? item.id;
-        if (typeof id !== 'string' || !id) throw new api.ApiError('The service returned an invalid profile.');
+        if (typeof id !== 'string' || !id) throw new api.ApiError('The service returned an invalid benchmark version.');
         if (profiles.has(id)) continue;
-        profiles.add(id); select.add(new Option(id, id));
+        profiles.add(id); select.add(new Option(api.profileLabel(id), id));
       }
       if (profiles.size === 1) select.value = [...profiles][0];
       select.disabled = profiles.size === 0; $('#submit-evaluation').disabled = profiles.size === 0;
-      message($('#evaluation-state'), profiles.size ? 'Complete the required fields to submit your evaluation.' : 'No evaluation profiles are currently published.');
+      message($('#evaluation-state'), profiles.size ? 'Complete the required fields to submit your evaluation.' : 'No benchmark versions are currently available.');
     } catch (error) { if (error.name !== 'AbortError') message($('#evaluation-state'), error.message, true); }
   };
   const setupContact = () => {
@@ -152,7 +152,7 @@
         const endpoint = new URL(value('model_endpoint'));
         if (endpoint.protocol !== 'https:' || (endpoint.port && endpoint.port !== '443') || endpoint.username || endpoint.password || endpoint.search || endpoint.hash) throw new Error();
       } catch { $('#participant-api-url').setCustomValidity('Use a public HTTPS URL on port 443, without credentials, a query, or a fragment.'); }
-      $('#evaluation-profile').setCustomValidity(profiles.has(value('profile_id')) ? '' : 'Choose a published evaluation profile.');
+      $('#evaluation-profile').setCustomValidity(profiles.has(value('profile_id')) ? '' : 'Choose an available benchmark version.');
       if (!form.reportValidity()) return;
       const evaluation = Object.fromEntries(['profile_id', 'team_display_name', 'model_id', 'model_version', 'model_endpoint', 'model_api_key'].map(name => [name, value(name)]));
       const website_metadata = Object.fromEntries(['organization', 'email', 'contact_method', 'contact_value', 'submission_type'].map(name => [name, value(name)]));
@@ -250,21 +250,24 @@
       const payload = await api.rankings(chosen, { signal: controller.signal });
       if (controller.signal.aborted) return;
       const options = api.rows(payload, 'profiles'), profile = payload.profile_id;
-      if (chosen && profile !== chosen) throw new api.ApiError('Results do not match the selected profile.');
+      if (chosen && profile !== chosen) throw new api.ApiError('Results do not match the selected benchmark version.');
       const rows = api.rows(payload, 'rankings');
       if (rows.length && (!profile || rows.some(row => row.profile_id !== profile || api.status(row) !== 'COMPLETED' || row.completed_episodes !== 720 || row.score_kind !== 'protocol' || row.eligible_for_ranking !== true || typeof row.score !== 'number' || !Number.isFinite(row.score) || row.score < 0 || row.score > 100))) throw new api.ApiError('The service returned incompatible ranking results.');
-      const select = $('#ranking-profile'); select.replaceChildren(new Option('Select an evaluation profile', ''));
-      for (const option of options) if (typeof option.profile_id === 'string') select.add(new Option(option.profile_id, option.profile_id));
-      if (profile) { if (![...select.options].some(option => option.value === profile)) throw new api.ApiError('The ranking profile is missing from the published list.'); select.value = profile; }
+      const select = $('#ranking-profile'); select.replaceChildren(new Option('Select a benchmark version', ''));
+      for (const option of options) if (typeof option.profile_id === 'string') select.add(new Option(api.profileLabel(option), option.profile_id));
+      if (profile) { if (![...select.options].some(option => option.value === profile)) throw new api.ApiError('The benchmark version is missing from the available list.'); select.value = profile; }
       select.disabled = options.length === 0;
-      $('#leaderboard-body').innerHTML = rows.length ? rows.map((row, index) => `<tr><td><span class="rank-value">${Number.isSafeInteger(row.rank) && row.rank > 0 ? row.rank : index + 1}</span></td><td>${escape(row.team_display_name)}</td><td>${escape(row.model_id)}<small class="record-version">${escape(row.model_version)}</small></td><td>${escape(category(row.website_metadata?.submission_type))}</td><td class="score-value">${escape(api.score(row))}</td></tr>`).join('') : '<tr class="leaderboard-empty"><td colspan="5"><strong>No protocol results are available for this profile yet.</strong></td></tr>';
+      $('#leaderboard-body').innerHTML = rows.length ? rows.map((row, index) => `<tr><td><span class="rank-value">${Number.isSafeInteger(row.rank) && row.rank > 0 ? row.rank : index + 1}</span></td><td>${escape(row.team_display_name)}</td><td>${escape(row.model_id)}<small class="record-version">${escape(row.model_version)}</small></td><td>${escape(category(row.website_metadata?.submission_type))}</td><td class="score-value">${escape(api.score(row))}</td></tr>`).join('') : '<tr class="leaderboard-empty"><td colspan="5"><strong>No verified scores yet.</strong></td></tr>';
       $('#leaderboard-count').textContent = `${rows.length} entries`;
-      message($('#leaderboard-status'), api.demo ? 'Demo rankings · illustrative sample data' : 'Protocol trial rankings'); $('.leaderboard-connection').dataset.state = 'connected';
+      message($('#leaderboard-status'), api.demo ? 'Demo rankings · illustrative sample data' : 'Rankings are open.'); $('.leaderboard-connection').dataset.state = 'connected';
       timers.set('rankings', setTimeout(loadRankings, 15000));
     } catch (error) {
-      if (error.name === 'AbortError') return;
-      $('#leaderboard-body').innerHTML = '<tr class="leaderboard-empty"><td colspan="5"><strong>Rankings are not available yet.</strong></td></tr>'; $('#leaderboard-count').textContent = '— entries';
-      message($('#leaderboard-status'), error.message, true); $('.leaderboard-connection').dataset.state = 'error';
+      if (error.name === 'AbortError' || controller.signal.aborted) return;
+      const closed = error.code === 'rankings_closed', unconfigured = error.code === 'rankings_unconfigured';
+      $('#leaderboard-body').innerHTML = `<tr class="leaderboard-empty"><td colspan="5"><strong>${escape(error.message)}</strong></td></tr>`; $('#leaderboard-count').textContent = '— entries';
+      message($('#leaderboard-status'), error.message, !closed && !unconfigured);
+      $('.leaderboard-connection').dataset.state = closed ? 'closed' : unconfigured ? 'idle' : 'error';
+      if (closed || unconfigured) $('#ranking-profile').disabled = true;
       if (api.rankingsConfigured) timers.set('rankings', setTimeout(loadRankings, 15000));
     }
   };

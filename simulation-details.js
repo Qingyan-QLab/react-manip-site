@@ -111,7 +111,7 @@
     if (!list) { list = node('dl'); list.id = 'record-submission-info'; $('#record-detail-state').after(list); }
     list.replaceChildren();
     const metadata = item.website_metadata || {};
-    for (const [label, value] of [['Profile', item.profile_id], ['Organization', metadata.organization], ['Category', metadata.submission_type], ['Email', metadata.email], [metadata.contact_method === 'wechat' ? 'WeChat' : 'Phone', metadata.contact_value]]) {
+    for (const [label, value] of [['Benchmark version', api.profileLabel(item)], ['Organization', metadata.organization], ['Category', metadata.submission_type], ['Email', metadata.email], [metadata.contact_method === 'wechat' ? 'WeChat' : 'Phone', metadata.contact_value]]) {
       if (value !== undefined && value !== null && value !== '') list.append(node('dt', label), node('dd', String(value)));
     }
   };

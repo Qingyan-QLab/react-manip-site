@@ -218,10 +218,10 @@
             <div><span class="section-number">04</span><h2>Leaderboard</h2></div>
             <a class="button primary" id="leaderboard-submit-link" href="https://8.130.107.114:18443/submit.html">Evaluation portal <span aria-hidden="true">↗</span></a>
           </div>
-          <p class="leaderboard-note">Highest verified score per team within each evaluation profile. Scores are ordered from high to low; ties go to the earlier completed evaluation. Updates every 15 seconds. Protocol trial scores only.</p>
-          <label class="evaluation-field ranking-profile-field" for="ranking-profile"><span>Evaluation profile</span><select id="ranking-profile" disabled><option value="">No profiles loaded</option></select></label>
-          <div class="leaderboard-toolbar"><div class="leaderboard-connection" data-state="idle"><i aria-hidden="true"></i><span id="leaderboard-status" role="status">Awaiting results</span></div><span id="leaderboard-count">— entries</span></div>
-          <div class="leaderboard-table-wrap" tabindex="0" role="region" aria-label="Leaderboard rankings"><table class="live-leaderboard"><thead><tr><th scope="col">Rank</th><th scope="col">Team name</th><th scope="col">Model</th><th scope="col">Category</th><th scope="col">Protocol score</th></tr></thead><tbody id="leaderboard-body"><tr class="leaderboard-empty"><td colspan="5"><span>REACT-MANIP</span><strong>Rankings are not available yet.</strong><small>Completed evaluations will appear here.</small></td></tr></tbody></table></div>
+          <p class="leaderboard-note">Highest verified score per team within each benchmark version. Scores are ordered from high to low; ties go to the earlier completed evaluation. Updates every 15 seconds. Protocol trial scores only.</p>
+          <label class="evaluation-field ranking-profile-field" for="ranking-profile"><span>Benchmark version</span><select id="ranking-profile" disabled><option value="">No versions loaded</option></select></label>
+          <div class="leaderboard-toolbar"><div class="leaderboard-connection" data-state="idle"><i aria-hidden="true"></i><span id="leaderboard-status" role="status">Checking rankings…</span></div><span id="leaderboard-count">— entries</span></div>
+          <div class="leaderboard-table-wrap" tabindex="0" role="region" aria-label="Leaderboard rankings"><table class="live-leaderboard"><thead><tr><th scope="col">Rank</th><th scope="col">Team name</th><th scope="col">Model</th><th scope="col">Category</th><th scope="col">Protocol score</th></tr></thead><tbody id="leaderboard-body"><tr class="leaderboard-empty"><td colspan="5"><span>REACT-MANIP</span><strong>Checking rankings…</strong></td></tr></tbody></table></div>
         </div>
       </section>
 
@@ -263,8 +263,8 @@
     <script src="tasks.js?v=20261030-demo" defer></script>
     <script src="script.js?v=20261030-demo" defer></script>
     <script src="demo-api.js?v=20261105-rankings" defer></script>
-    <script src="evaluation-api.js?v=20261105-rankings" defer></script>
-    <script src="leaderboard.js?v=20261105-rankings" defer></script>
+    <script src="evaluation-api.js?v=20261110-version-label" defer></script>
+    <script src="leaderboard.js?v=20261110-version-label" defer></script>
   </body>
 </html>
 
