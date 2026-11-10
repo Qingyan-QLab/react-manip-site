@@ -761,6 +761,9 @@ h2 { font-size: clamp(34px, 4vw, 46px); }
 .live-leaderboard tbody tr:last-child td { border-bottom: 0; }
 .live-leaderboard .score-value { color: #25324a; font-size: 16px; }
 .rank-medal { display: inline-block; font-size: 24px; line-height: 1; }
+.ranking-team { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; }
+.ranking-team-logo { display: block; flex: 0 0 24px; width: 24px; height: 24px; object-fit: contain; }
+.ranking-team > span { min-width: 0; }
 .ranking-unavailable { color: #8491a3; }
 .rankings-scroll-hint { display: none; margin: 0 0 10px; color: #68778e; font-size: 12px; }
 .rankings-scroll-hint span { margin-left: 6px; }

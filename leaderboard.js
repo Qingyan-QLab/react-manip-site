@@ -22,6 +22,12 @@
     const version = String(item.model_version ?? '').trim();
     return version && version.toLowerCase() !== 'low' ? `<small class="record-version">${escape(version)}</small>` : '';
   };
+  const openAITeams = new Set(['OpenAI_1', 'OpenAI_2', 'OpenAI_3', 'OpenAI_4', 'OpenAI + Physical Intelligence']);
+  const rankingTeam = item => {
+    const name = item.team_display_name;
+    if (!openAITeams.has(name)) return escape(name);
+    return `<span class="ranking-team"><img class="ranking-team-logo" src="image/openai-logo.png" width="24" height="24" alt="" aria-hidden="true" /><span>${escape(name)}</span></span>`;
+  };
   const message = (node, text, error = false) => { if (node) { node.textContent = text; node.dataset.state = error ? 'error' : ''; } };
   const awaitingRelay = item => ['PREPARED', 'UNCERTAIN'].includes(item.relay_state);
   const relayNeedsAttention = item => awaitingRelay(item) && item.relay_can_retry === false;
@@ -272,7 +278,7 @@
       for (const option of options) if (typeof option.profile_id === 'string') select.add(new Option(api.profileLabel(option), option.profile_id));
       if (profile) { if (![...select.options].some(option => option.value === profile)) throw new api.ApiError('The benchmark version is missing from the available list.'); select.value = profile; }
       select.disabled = options.length === 0;
-      $('#leaderboard-body').innerHTML = rows.length ? rows.map((row, index) => `<tr><td>${rankBadge(row, index)}</td><td>${escape(row.team_display_name)}</td><td>${escape(row.model_id)}${rankingVersion(row)}</td><td>${escape(category(row.website_metadata?.submission_type))}</td><td class="score-value">${escape(api.score(row))}</td><td class="exam-success">${examSuccess(row)}</td><td>${unavailable}</td><td>${unavailable}</td></tr>`).join('') : '<tr class="leaderboard-empty"><td colspan="8"><strong>No verified scores yet.</strong></td></tr>';
+      $('#leaderboard-body').innerHTML = rows.length ? rows.map((row, index) => `<tr><td>${rankBadge(row, index)}</td><td>${rankingTeam(row)}</td><td>${escape(row.model_id)}${rankingVersion(row)}</td><td>${escape(category(row.website_metadata?.submission_type))}</td><td class="score-value">${escape(api.score(row))}</td><td class="exam-success">${examSuccess(row)}</td><td>${unavailable}</td><td>${unavailable}</td></tr>`).join('') : '<tr class="leaderboard-empty"><td colspan="8"><strong>No verified scores yet.</strong></td></tr>';
       $('#leaderboard-count').textContent = `${rows.length} entries`;
       message($('#leaderboard-status'), api.demo ? 'Demo rankings · illustrative sample data' : 'Rankings are open.'); $('.leaderboard-connection').dataset.state = 'connected';
       timers.set('rankings', setTimeout(loadRankings, 15000));
