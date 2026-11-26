@@ -3,7 +3,7 @@
 // recordsOrigin is for the verified, anonymous DSW records entry only.
 window.ReactManipSiteConfig = Object.freeze({
   apiOrigin: '',
-  recordsOrigin: '',
+  recordsOrigin: "https://actions-logic-fruit-hired.trycloudflare.com",
   // Enable only after backend admission and a complete evaluation have been verified.
   submissionsEnabled: false
 });
