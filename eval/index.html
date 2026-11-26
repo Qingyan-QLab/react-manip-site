@@ -1,172 +1,44 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="referrer" content="no-referrer" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Submit a ReAct-Manip model evaluation and find your private evaluation records by team name." />
-    <meta name="website-api" content="" />
-    <meta name="website-default-profile" content="react-manip-dev-egl-20261116-efa04b5c6c20" />
-    <title>Evaluation — ReAct-Manip</title>
-    <link rel="stylesheet" href="styles.css?v=20261110-records-v2" />
-    <link rel="stylesheet" href="auth.css?v=20261104" />
-    <link rel="stylesheet" href="portal.css?v=20261126" />
-    <script src="config.js?v=20261126-records-0418" defer></script>
-    <script src="configure.js?v=20261126" defer></script>
-  </head>
-  <body class="evaluation-page">
-    <header class="site-header">
-      <div class="container header-inner">
-        <a class="brand" href="../index.html#top">ReAct-Manip</a>
-        <nav aria-label="Primary navigation">
-          <a href="../index.html#background">Background</a><a href="../index.html#specification">Task Specification</a>
-          <a href="../index.html#task-catalog">16 Tasks</a><a href="../index.html#leaderboard">Leaderboard</a><a href="../index.html#citation">Cite</a>
-        </nav>
-      </div>
-    </header>
-    <main class="evaluation-main container" id="top">
-      <a class="evaluation-back" href="../index.html#leaderboard">← Back to leaderboard</a>
-      <div class="evaluation-heading">
-        <span class="eyebrow">ReAct-Manip · Evaluation</span>
-        <h1>Evaluate your model</h1>
-        <p>One evaluation runs 16 tasks × 3 instances × 15 episodes: 720 episodes in total, including 240 scored exam episodes.</p>
-      </div>
-      <section class="evaluation-account" aria-labelledby="public-records-title">
-        <div class="evaluation-account-heading"><h2 id="public-records-title">Published evaluation records</h2><p>Search by Team name without signing in. View all practice and exam records, with videos for exam episodes.</p></div>
-        <form action="records.html" method="get" class="evaluation-records-search">
-          <label class="evaluation-field" for="public-team-name"><span>Team name</span><input id="public-team-name" name="team" type="search" maxlength="120" placeholder="Enter the full team name" required /></label>
-          <button class="button primary" type="submit">Find published records ↗</button>
-        </form>
-      </section>
-      <aside class="evaluation-demo" aria-labelledby="evaluation-demo-title">
-        <div>
-          <span class="submit-label">Interactive demo</span>
-          <h2 id="evaluation-demo-title">Explore a sample evaluation</h2>
-          <p id="demo-description">Demo results and videos are illustrative. They do not run the evaluator or count as benchmark results.</p>
-        </div>
-        <div class="evaluation-demo-actions">
-          <a class="button" href="../submit.html?demo=1#records">Open demo records ↗</a>
-          <a class="button primary" href="../submit.html?demo=1#submission">Try demo submission ↗</a>
-        </div>
-      </aside>
-      <p class="evaluation-message" id="service-state" role="status">The evaluation service is being prepared. New evaluations are not open yet.</p>
-      <section id="account-panel" class="evaluation-account" aria-labelledby="account-title">
-        <div class="evaluation-account-heading"><h2 id="account-title">Team account</h2><p id="account-state" class="evaluation-message" role="status" aria-live="polite">Sign-in will be available when the evaluation service is connected.</p></div>
-        <form id="login-form">
-          <fieldset id="login-controls" class="portal-fieldset evaluation-account-form" disabled>
-          <label class="evaluation-field" for="login-team"><span>Team name</span><input id="login-team" name="team_name" type="text" maxlength="120" autocomplete="username" required /></label>
-          <label class="evaluation-field" for="login-password"><span>Password</span><input id="login-password" name="password" type="password" maxlength="200" autocomplete="current-password" required /></label>
-          <button id="sign-in" class="button primary" type="submit">Sign in</button>
-          </fieldset>
-        </form>
-        <p id="account-help" class="field-hint" hidden>Use the team account provided by the organizers. Your account password is separate from your model API key.</p>
-        <button id="sign-out" class="button" type="button" hidden>Sign out</button>
-      </section>
-      <div class="evaluation-tabs" role="tablist" aria-label="Evaluation options">
-        <button id="submission-tab" class="evaluation-tab" type="button" role="tab" aria-selected="true" aria-controls="submission-panel" tabindex="0" data-evaluation-tab="submission">Submit evaluation</button>
-        <button id="records-tab" class="evaluation-tab" type="button" role="tab" aria-selected="false" aria-controls="records-panel" tabindex="-1" data-evaluation-tab="records">Evaluation records</button>
-      </div>
-      <section id="submission-panel" class="evaluation-panel" role="tabpanel" aria-labelledby="submission-tab" tabindex="0">
-        <div class="evaluation-panel-heading">
-          <span class="section-number">01 / Submission</span><h2>Your submission</h2>
-          <p>Evaluation and team information are required. Scores are protocol trial results, not official benchmark scores.</p>
-        </div>
-        <form id="submission-form">
-          <fieldset id="submission-controls" class="portal-fieldset" disabled>
-          <div class="evaluation-fields submission-profile">
-            <label class="evaluation-field" for="team-name"><span>Team name <span class="required-mark" aria-hidden="true">*</span></span>
-              <input id="team-name" name="team_display_name" type="text" placeholder="Your team name" maxlength="120" autocomplete="off" required />
-              <small class="field-hint">Use this team name to find your evaluation records.</small>
-            </label>
-            <label class="evaluation-field" for="model-id"><span>Model / policy name <span class="required-mark" aria-hidden="true">*</span></span>
-              <input id="model-id" name="model_id" type="text" placeholder="my-policy" maxlength="120" autocomplete="off" spellcheck="false" required />
-            </label>
-            <label class="evaluation-field" for="model-version"><span>Model version <span class="required-mark" aria-hidden="true">*</span></span>
-              <input id="model-version" name="model_version" type="text" placeholder="v1" maxlength="120" autocomplete="off" required />
-            </label>
-            <label class="evaluation-field" for="evaluation-profile"><span>Benchmark version <span class="required-mark" aria-hidden="true">*</span></span>
-              <select id="evaluation-profile" name="profile_id" required disabled><option value="">No benchmark versions loaded</option></select>
-              <small class="field-hint">Choose a benchmark version. Results from different versions are ranked separately.</small>
-            </label>
-            <label class="evaluation-field" for="participant-api-url"><span>Model HTTPS URL <span class="required-mark" aria-hidden="true">*</span></span>
-              <input id="participant-api-url" name="model_endpoint" type="url" placeholder="https://model.example/evaluate" autocomplete="off" spellcheck="false" required />
-              <small class="field-hint">Public HTTPS on port 443. Your model must support the remote v2 lifecycle protocol.</small>
-            </label>
-            <label class="evaluation-field" for="participant-api-key"><span>Model API key <span class="required-mark" aria-hidden="true">*</span></span>
-              <input id="participant-api-key" name="model_api_key" type="password" placeholder="Model service API key" autocomplete="off" spellcheck="false" required />
-              <small class="field-hint">Sent securely to the backend with your model URL for evaluation. Never put the key in the URL.</small>
-            </label>
-          </div>
-          <div class="submission-section-heading"><h3>Team and contact information</h3></div>
-          <div class="evaluation-fields submission-profile">
-            <label class="evaluation-field" for="organization"><span>Organization <span class="required-mark" aria-hidden="true">*</span></span>
-              <input id="organization" name="organization" type="text" placeholder="University, company, or independent" maxlength="150" autocomplete="organization" required />
-            </label>
-            <label class="evaluation-field" for="model-category"><span>Model category <span class="required-mark" aria-hidden="true">*</span></span>
-              <select id="model-category" name="submission_type" required><option value="">Choose a category</option><option value="agent">Agent</option><option value="model">Model</option></select>
-            </label>
-            <label class="evaluation-field" for="contact-email"><span>Email <span class="required-mark" aria-hidden="true">*</span></span>
-              <input id="contact-email" name="email" type="email" placeholder="you@example.com" maxlength="254" autocomplete="email" required />
-            </label>
-            <label class="evaluation-field" for="contact-method"><span>Contact method <span class="required-mark" aria-hidden="true">*</span></span>
-              <select id="contact-method" name="contact_method" required><option value="phone">Phone number / 手机号</option><option value="wechat">WeChat / 微信</option></select>
-            </label>
-            <label class="evaluation-field" for="contact-value"><span><span id="contact-value-label">Phone number</span> <span class="required-mark" aria-hidden="true">*</span></span>
-              <input id="contact-value" name="contact_value" type="tel" inputmode="tel" placeholder="+86 138 0000 0000" maxlength="40" autocomplete="tel" aria-describedby="contact-value-hint" required />
-              <small id="contact-value-hint" class="field-hint">Include the country code for international numbers.</small>
-            </label>
-          </div>
-          <div class="evaluation-form-footer">
-            <p id="evaluation-state" class="evaluation-message" role="status" aria-live="polite">New evaluations are not open yet.</p>
-            <button class="button primary" id="submit-evaluation" type="submit" disabled>Submit evaluation ↗</button>
-          </div>
-          </fieldset>
-        </form>
-        <div id="submission-result" class="submission-result" hidden>
-          <div><span class="submit-label" id="submission-result-label">Evaluation submitted</span><strong id="submitted-team-name"></strong></div>
-          <span id="submission-status"></span>
-          <button id="view-evaluation-records" class="button" type="button">View team records ↗</button>
-        </div>
-      </section>
-      <section id="records-panel" class="evaluation-panel" role="tabpanel" aria-labelledby="records-tab" tabindex="0" hidden>
-        <div class="evaluation-panel-heading">
-          <span class="section-number">02 / Records</span><h2>Evaluation records</h2>
-          <p>Find your evaluations by team name. Private records and videos remain restricted to the submitting account.</p>
-        </div>
-        <form id="records-form">
-          <fieldset id="records-controls" class="portal-fieldset evaluation-records-search" disabled>
-          <label class="evaluation-field" for="records-team-name"><span>Team name <span class="required-mark" aria-hidden="true">*</span></span>
-            <input id="records-team-name" name="team_name" type="search" placeholder="Enter your team name" maxlength="120" autocomplete="off" required />
-          </label>
-          <button class="button primary" id="load-evaluation-records" type="submit">Search records ↗</button>
-          </fieldset>
-        </form>
-        <div class="evaluation-records-toolbar"><p id="records-state" class="evaluation-message" role="status" aria-live="polite">Enter a team name to search your records.</p><span id="records-count">— records</span></div>
-        <div class="leaderboard-table-wrap" role="region" aria-label="Evaluation records table" tabindex="0">
-          <table class="evaluation-records"><thead><tr><th scope="col">Team name</th><th scope="col">Model</th><th scope="col">Benchmark version</th><th scope="col">Category</th><th scope="col">Organization</th><th scope="col">Status</th><th scope="col">Protocol score</th></tr></thead>
-            <tbody id="evaluation-records-body"><tr class="leaderboard-empty"><td colspan="7"><strong>Find your evaluation history.</strong><small>Search by team name to find your evaluations.</small></td></tr></tbody>
-          </table>
-        </div>
-        <button id="records-load-more" class="button records-load-more" type="button" hidden>Search next page</button>
-        <div id="record-detail" class="record-detail" role="region" aria-labelledby="record-detail-title" tabindex="-1" hidden>
-          <span class="submit-label">Evaluation details</span><h3 id="record-detail-title"></h3>
-          <p id="record-detail-state" class="evaluation-message" role="status" aria-live="polite"></p>
-          <p id="record-media-expiry" class="field-hint"></p>
-          <button id="cancel-evaluation" type="button" class="button" hidden>Cancel evaluation</button>
-          <details id="task-records" class="simulation-records"><summary>Task results</summary>
-            <div class="simulation-records-content"><p id="tasks-state" class="evaluation-message" role="status"></p><div id="task-records-list"></div></div>
-          </details>
-          <details id="video-records" class="simulation-records"><summary>Private evaluation videos</summary>
-            <div class="simulation-records-content"><p id="videos-state" class="evaluation-message" role="status"></p><div id="video-records-list"></div><button id="videos-load-more" type="button" class="button" hidden>Load more videos</button></div>
-          </details>
-        </div>
-      </section>
-      <noscript><p class="evaluation-message">Enable JavaScript to submit evaluations and search records.</p></noscript>
-    </main>
-    <footer class="site-footer"><div class="container footer-inner"><span>ReAct-Manip · 2026</span><span>Questions: <a href="mailto:weikeming@qlab.team">weikeming@qlab.team</a></span></div></footer>
-    <script src="evaluation-api.js?v=20261126" defer></script>
-    <script src="auth.js?v=20261126" defer></script>
-    <script src="leaderboard.js?v=20261126" defer></script>
-    <script src="simulation-details.js?v=20261126" defer></script>
-  </body>
-</html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>在线评测 · ReAct-Manip</title>
+  <link rel="stylesheet" href="web-portal.css?v=20261126-web1">
+  <script src="config.js?v=20261126-web1" defer></script>
+  <script src="web-portal.js?v=20261126-web1" defer></script>
+</head>
+<body>
+  <header><a class="brand" href="https://qlab-ai.org/react-manip-site/">ReAct-Manip</a><nav><a href="https://qlab-ai.org/react-manip-site/eval/records.html">已发布评测记录</a><a href="mailto:weikeming@qlab.team">联系我们</a></nav></header>
+  <main>
+    <p class="eyebrow">模型评测</p><h1>从提交到回看，一处完成。</h1>
+    <p class="intro">在工作站运行 GPU 仿真，保存每次评测的记录和视频，完成后在线查看。</p>
+    <p id="service" class="notice" role="status">正在连接评测服务…</p>
+    <section aria-labelledby="account-title">
+      <div class="section-top"><h2 id="account-title">团队登录</h2><button id="logout" type="button" hidden>退出登录</button></div>
+      <form id="login"><label>账户名<input name="team" maxlength="80" autocomplete="username" required></label><label>密码<input name="password" type="password" maxlength="200" autocomplete="current-password" required></label><button class="primary" type="submit" disabled>登录</button></form>
+      <p id="account" role="status">使用部署时创建的团队账户。刷新页面后需要重新登录。</p>
+    </section>
+    <section aria-labelledby="submission-title">
+      <h2 id="submission-title">新建评测</h2>
+      <form id="submit"><fieldset id="submit-controls" disabled>
+        <div class="fields"><label>模型<input value="gpt-6-astra" readonly></label><label>推理强度<input value="high" readonly></label>
+        <label>评测范围<select id="mode"><option value="acceptance">连接验收 · 1 回合 / 最多 6 步</option><option id="full-option" value="full" disabled>完整评测 · 16 个任务 / 720 回合</option></select></label>
+        <label>验收任务<select id="task"></select></label></div>
+        <p class="hint" id="scope">连接验收会真实调用模型、运行 GPU 仿真并保存视频。它不产生完整基准评分，模型推理可能需要几分钟。</p>
+        <button class="primary" id="submit-button" type="submit">提交评测</button>
+      </fieldset></form><p id="submission-state" role="status" aria-live="polite"></p>
+    </section>
+    <section aria-labelledby="records-title">
+      <div class="section-top"><h2 id="records-title">我的评测记录</h2><button id="refresh" type="button" disabled>刷新</button></div>
+      <p class="hint">仅当前账户可查看。归档完成后，视频从 OSS 归档读取。</p>
+      <div id="jobs" role="list"><p>登录后显示评测记录。</p></div>
+      <article id="detail" hidden><div class="section-top"><h3 id="detail-title">评测详情</h3><button id="cancel" type="button" hidden>取消评测</button></div>
+        <p id="detail-state" role="status"></p><div id="facts" class="facts"></div>
+        <div id="episodes" class="table-wrap"></div><div id="videos"></div>
+        <p id="media-state" role="status"></p><video id="player" controls playsinline preload="metadata" hidden></video>
+        <a id="download" hidden>下载当前视频</a>
+      </article>
+    </section><noscript>请启用 JavaScript 后使用评测服务。</noscript>
+  </main><footer>ReAct-Manip · <a href="mailto:weikeming@qlab.team">weikeming@qlab.team</a></footer>
+</body></html>
