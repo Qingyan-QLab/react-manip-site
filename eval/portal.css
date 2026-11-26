@@ -1,0 +1,8 @@
+[hidden] { display: none !important; }
+.portal-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.portal-fieldset:disabled input,
+.portal-fieldset:disabled select,
+.portal-fieldset:disabled button { opacity: .6; cursor: not-allowed; }
+.portal-fieldset:disabled .button { box-shadow: none; }
+.portal-private-link { margin: 20px 0; }
+#account-panel { scroll-margin-top: 90px; }

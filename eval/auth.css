@@ -1,0 +1,17 @@
+.evaluation-account {
+  border: 1px solid var(--line, #d9dce3);
+  border-radius: 16px;
+  background: var(--surface, #fff);
+  padding: 24px;
+  margin: 24px 0;
+}
+.evaluation-account[hidden], .evaluation-account [hidden] { display: none; }
+.evaluation-account-heading h2 { font-size: 1.1rem; margin: 0 0 8px; }
+.evaluation-account-heading p { margin: 0 0 16px; }
+.evaluation-account-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: end; }
+.evaluation-account-form .button { min-height: 46px; }
+.evaluation-account .field-hint { margin: 12px 0 0; }
+@media (max-width: 640px) {
+  .evaluation-account { padding: 20px; }
+  .evaluation-account-form { grid-template-columns: 1fr; }
+}
