@@ -322,7 +322,7 @@
       select.disabled = options.length === 0;
       $('#leaderboard-body').innerHTML = rows.length ? rows.map((row, index) => `<tr><td>${rankBadge(row, index)}</td><td>${rankingTeam(row)}</td><td>${escape(row.model_id)}${rankingVersion(row)}</td><td>${escape(category(row.website_metadata?.submission_type))}</td><td class="score-value">${escape(api.score(row))}</td><td class="exam-success">${examSuccess(row)}</td><td>${rankingArchive(row)}</td><td>${rankingArchive(row, true)}</td></tr>`).join('') : '<tr class="leaderboard-empty"><td colspan="8"><strong>No verified scores yet.</strong></td></tr>';
       $('#leaderboard-count').textContent = `${rows.length} entries`;
-      message($('#leaderboard-status'), api.demo ? 'Demo rankings · illustrative sample data' : 'Rankings are open.'); $('.leaderboard-connection').dataset.state = 'connected';
+      message($('#leaderboard-status'), api.demo ? 'Demo rankings · illustrative sample data' : (payload.historical_snapshot ? 'Historical snapshot · ' + new Date(payload.snapshot_at).toLocaleString() : 'Rankings are open.')); $('.leaderboard-connection').dataset.state = 'connected';
       timers.set('rankings', setTimeout(loadRankings, 15000));
     } catch (error) {
       if (error.name === 'AbortError' || controller.signal.aborted) return;

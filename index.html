@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="ReAct-Manip benchmarks learning by doing in robot manipulation through 10 practice Episodes and 5 evaluation Episodes per Task Instance." />
     <meta name="website-api" content="" />
-    <meta name="website-rankings" content="https://8.130.107.114:18443" />
+    <meta name="website-rankings" content="" />
 
     <link rel="preconnect" href="https://quotient-lab.github.io" crossorigin />
     <link rel="dns-prefetch" href="//quotient-lab.github.io" />
@@ -216,10 +216,10 @@
         <div class="container">
           <div class="section-heading leaderboard-heading">
             <div><span class="section-number">04</span><h2>Leaderboard</h2></div>
-            <a class="button primary" id="leaderboard-submit-link" href="https://8.130.107.114:18443/submit.html">Evaluation portal <span aria-hidden="true">↗</span></a>
+            <a class="button primary" id="leaderboard-submit-link" href="eval/">Evaluation portal <span aria-hidden="true">↗</span></a>
           </div>
           <p class="leaderboard-note">Highest verified score per team within each benchmark version. Scores are ordered from high to low; ties go to the earlier recorded result. Updates every 15 seconds. Protocol trial scores only.</p>
-          <p class="leaderboard-public-records"><a href="records.html">Find evaluation records by Team name <span aria-hidden="true">↗</span></a></p>
+          <p class="leaderboard-public-records"><a href="eval/records.html">Find evaluation records by Team name <span aria-hidden="true">↗</span></a></p>
           <label class="evaluation-field ranking-profile-field" for="ranking-profile"><span>Benchmark version</span><select id="ranking-profile" disabled><option value="">No versions loaded</option></select></label>
           <div class="leaderboard-toolbar"><div class="leaderboard-connection" data-state="idle"><i aria-hidden="true"></i><span id="leaderboard-status" role="status">Checking rankings…</span></div><span id="leaderboard-count">— entries</span></div>
           <p class="rankings-scroll-hint">Swipe to view all columns <span aria-hidden="true">↔</span></p>
@@ -265,8 +265,10 @@
     <script src="tasks.js?v=20261030-demo" defer></script>
     <script src="script.js?v=20261030-demo" defer></script>
     <script src="demo-api.js?v=20261105-rankings" defer></script>
-    <script src="evaluation-api.js?v=20261110-version-label" defer></script>
-    <script src="leaderboard.js?v=20261110-image12" defer></script>
+    <script src="eval/config.js?v=20261126-recovery" defer></script>
+    <script src="eval/configure.js?v=20261126-recovery" defer></script>
+    <script src="eval/evaluation-api.js?v=20261126-recovery" defer></script>
+    <script src="leaderboard.js?v=20261126-recovery" defer></script>
   </body>
 </html>
 

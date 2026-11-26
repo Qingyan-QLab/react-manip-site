@@ -224,7 +224,8 @@
       if (!current('index', operation)) return;
       record = validateRecord(data, id); showSummary();
       if (updateURL) setLocation({ team: record.team_display_name, record: id, view: mode === 'videos' ? 'videos' : '' });
-      message('#published-state', 'Published records loaded. Video and log files load only when you request them.');
+      const snapshotNotice = record.historical_snapshot ? `Historical snapshot · ${new Date(record.snapshot_at).toLocaleString()}. ` : '';
+      message('#published-state', snapshotNotice + 'Published records loaded. Video and log files load only when you request them.');
       $('#published-match-list').querySelectorAll('button').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.record === id)));
     } catch (error) {
       if (controllers.get('index') !== operation || error.name === 'AbortError' && !operation.timedOut) return;
